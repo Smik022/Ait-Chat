@@ -1,199 +1,459 @@
-const stats = [
-  { label: "Conversations today", value: "1,284", delta: "+23%" },
-  { label: "DM conversion", value: "12.3%", delta: "+2.1%" },
-  { label: "Revenue attributed", value: "৳40,200", delta: "+34.2%" },
-  { label: "Containment", value: "87.4%", delta: "+6.8%" },
-];
+"use client";
 
-const conversations = [
-  { customer: "Tasnim Rahman", channel: "Instagram", intent: "product inquiry", status: "sales agent" },
-  { customer: "Rafiul Islam", channel: "WhatsApp", intent: "order tracking", status: "support agent" },
-  { customer: "Shakil Ahmed", channel: "WhatsApp", intent: "refund review", status: "manager review" },
-  { customer: "Nusrat Jahan", channel: "Instagram", intent: "abandoned cart", status: "retention agent" },
-];
+import * as React from "react";
+import Link from "next/link";
+import { ArrowRight, ArrowUpRight } from "lucide-react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+} from "recharts";
 
-const orderRows = [
-  { id: "ORD-9317", customer: "Rafiul Islam", product: "Chaya Cotton Kurti", amount: "৳2,580", status: "shipped" },
-  { id: "ORD-9316", customer: "Tasnim Rahman", product: "Dhakai Jamdani Saree", amount: "৳3,890", status: "processing" },
-  { id: "ORD-9315", customer: "Nusrat Jahan", product: "Tangail Cotton Saree", amount: "৳2,190", status: "delivered" },
-];
+import { cn } from "@/lib/utils";
+import {
+  actionLabel,
+  agents,
+  benchmarkFor,
+  conversations,
+  conversationStatusMeta,
+  formatBDT,
+  formatBDTScale,
+  funnel,
+  languageMix,
+  orders,
+  revenueSeries,
+} from "@/lib/data";
 
-const agentCards = [
-  { name: "Router", focus: "Intent + sentiment routing", state: "online" },
-  { name: "Sales", focus: "Quote + checkout", state: "busy" },
-  { name: "Support", focus: "Orders + returns", state: "online" },
-  { name: "Manager", focus: "Approvals + human handoff", state: "online" },
-];
+const banglishBenchmark = benchmarkFor("Banglish sentiment accuracy");
+import { useLive, useMounted, useSettledNumber } from "@/lib/live";
+import {
+  AgentBadge,
+  BenchmarkNote,
+  ChannelBadge,
+  Chip,
+  Metric,
+  MetricRow,
+  Mono,
+  OutcomeChip,
+  PageHeader,
+  Panel,
+  PanelHeader,
+  StatusDot,
+} from "@/components/primitives";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart";
 
-export default function AdminPage() {
+const chartConfig = {
+  revenue: { label: "Attributed revenue", color: "var(--chart-1)" },
+} satisfies ChartConfig;
+
+function LiveActivity() {
+  const { events, newestId, live } = useLive();
+  const mounted = useMounted();
+
   return (
-    <div className="space-y-6">
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {stats.map((stat) => (
-          <div key={stat.label} className="rounded-[1.5rem] border border-[#e7e2d7] bg-white p-4 shadow-sm">
-            <div className="text-sm text-[#667085]">{stat.label}</div>
-            <div className="mt-3 flex items-end justify-between gap-2">
-              <div className="text-2xl font-semibold tracking-tight text-[#111827]">{stat.value}</div>
-              <div className="rounded-full bg-[#eaf7f1] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#0d5d45]">
-                {stat.delta}
+    <Panel className="flex min-h-0 flex-col">
+      <PanelHeader
+        title="What the agents did"
+        description="Every action they wanted to take, and whether your rules allowed it."
+        action={
+          <Link
+            href="/admin/guardrails"
+            className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Open
+            <ArrowRight className="size-3" />
+          </Link>
+        }
+      />
+      <div className="max-h-[26rem] overflow-y-auto">
+        <table className="w-full text-left text-[13px]">
+          <thead className="sticky top-0 z-10 bg-card">
+            <tr className="border-b text-[11px] text-muted-foreground">
+              <th className="px-4 py-2 font-medium">Time</th>
+              <th className="px-2 py-2 font-medium">Action</th>
+              <th className="px-2 py-2 font-medium">Agent</th>
+              <th className="px-2 py-2 font-medium">Result</th>
+              <th className="hidden px-2 py-2 font-medium md:table-cell">Detail</th>
+              <th className="px-4 py-2 text-right font-medium">Latency</th>
+            </tr>
+          </thead>
+          <tbody>
+            {events.slice(0, 14).map((e) => (
+              <tr
+                key={e.id}
+                className={cn(
+                  "border-b last:border-0 align-middle",
+                  mounted && live && e.id === newestId && "animate-row-in"
+                )}
+              >
+                <td className="px-4 py-2 font-mono text-[11px] text-muted-foreground tabular-nums">
+                  {e.time}
+                </td>
+                <td className="px-2 py-2 font-medium">{actionLabel(e.tool)}</td>
+                <td className="px-2 py-2">
+                  <AgentBadge agent={e.agent} />
+                </td>
+                <td className="px-2 py-2">
+                  <div className="flex items-center gap-1.5">
+                    <OutcomeChip outcome={e.outcome} />
+                    {e.policy ? (
+                      <Mono className="text-[11px] text-muted-foreground">
+                        {e.policy}
+                      </Mono>
+                    ) : null}
+                  </div>
+                </td>
+                <td className="hidden max-w-[22rem] truncate px-2 py-2 text-muted-foreground md:table-cell">
+                  {e.detail}
+                </td>
+                <td
+                  className={cn(
+                    "px-4 py-2 text-right font-mono text-[11px] tabular-nums",
+                    e.latencyMs > 3000 ? "text-pend-ink" : "text-muted-foreground"
+                  )}
+                >
+                  {e.latencyMs}ms
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Panel>
+  );
+}
+
+function Workforce() {
+  return (
+    <Panel>
+      <PanelHeader
+        title="Agent workforce"
+        description="Who is handling what right now."
+        action={
+          <Link
+            href="/admin/agents"
+            className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Open
+            <ArrowRight className="size-3" />
+          </Link>
+        }
+      />
+      <ul className="divide-y">
+        {agents.map((a) => (
+          <li key={a.id} className="flex items-center gap-3 px-4 py-2.5">
+            <span className="flex size-7 shrink-0 items-center justify-center rounded bg-muted font-mono text-[10px] font-medium">
+              {a.initials}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[13px] font-medium">{a.name}</span>
+              <span className="block truncate text-[11px] text-muted-foreground">
+                {a.title}
+              </span>
+            </span>
+            <span className="flex shrink-0 items-center gap-2.5">
+              {a.handlesNow > 0 ? (
+                <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
+                  {a.handlesNow}
+                </span>
+              ) : null}
+              <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                <StatusDot
+                  className={
+                    a.status === "online"
+                      ? "bg-live"
+                      : a.status === "busy"
+                        ? "bg-pend"
+                        : "bg-muted-foreground"
+                  }
+                  pulse={a.status === "busy"}
+                />
+                {a.status}
+              </span>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </Panel>
+  );
+}
+
+function NeedsAPerson() {
+  const waiting = conversations.filter(
+    (c) => c.status === "awaiting-approval" || c.status === "with-human"
+  );
+  const refund = orders.find((o) => o.status === "return-requested");
+
+  return (
+    <Panel>
+      <PanelHeader
+        title="Needs a person"
+        description="Held at the gateway until someone decides."
+      />
+      <ul className="divide-y">
+        {waiting.map((c) => (
+          <li key={c.id} className="px-4 py-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="truncate text-[13px] font-medium">
+                    {c.customer}
+                  </span>
+                  <ChannelBadge channel={c.channel} withLabel={false} />
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">{c.intent}</p>
               </div>
+              <Chip tone={conversationStatusMeta[c.status].tone}>
+                {conversationStatusMeta[c.status].label}
+              </Chip>
+            </div>
+            <Link
+              href={`/admin/inbox?thread=${c.id}`}
+              className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-foreground underline-offset-4 hover:underline"
+            >
+              Review thread
+              <ArrowUpRight className="size-3" />
+            </Link>
+          </li>
+        ))}
+        {refund ? (
+          <li className="px-4 py-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <Mono className="text-[12px] font-medium">{refund.id}</Mono>
+                  <Chip tone="bg-pend-soft text-pend-ink">Refund review</Chip>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {formatBDT(refund.amount)} · {refund.customer} · under the ৳3,000
+                  ceiling, outside Support&rsquo;s scope
+                </p>
+              </div>
+            </div>
+            <Link
+              href={`/admin/orders?order=${refund.id}`}
+              className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-foreground underline-offset-4 hover:underline"
+            >
+              Open order
+              <ArrowUpRight className="size-3" />
+            </Link>
+          </li>
+        ) : null}
+      </ul>
+    </Panel>
+  );
+}
+
+function Funnel() {
+  const top = funnel[0].value;
+  return (
+    <Panel>
+      <PanelHeader
+        title="Comment to order"
+        description="The last post, followed all the way through."
+        action={
+          <Link
+            href="/admin/comments"
+            className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Open
+            <ArrowRight className="size-3" />
+          </Link>
+        }
+      />
+      <ul className="divide-y">
+        {funnel.map((s, i) => {
+          const pct = Math.round((s.value / top) * 100);
+          const drop =
+            i === 0 ? null : Math.round((s.value / funnel[i - 1].value) * 100);
+          return (
+            <li key={s.stage} className="px-4 py-2.5">
+              <div className="flex items-baseline justify-between gap-3">
+                <span className="text-[13px] font-medium">{s.stage}</span>
+                <span className="flex items-baseline gap-2">
+                  {drop !== null ? (
+                    <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
+                      {drop}%
+                    </span>
+                  ) : null}
+                  <span className="font-mono text-sm font-medium tabular-nums">
+                    {s.value}
+                  </span>
+                </span>
+              </div>
+              <div className="mt-1.5 flex items-center gap-2">
+                <div className="h-1 flex-1 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full bg-live"
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+                <span className="w-36 shrink-0 truncate text-[11px] text-muted-foreground">
+                  {s.note}
+                </span>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </Panel>
+  );
+}
+
+function RevenueChart() {
+  return (
+    <Panel>
+      <PanelHeader
+        title="Attributed revenue"
+        description="Orders whose conversation began in a social channel."
+        action={
+          <span className="font-mono text-sm font-medium tabular-nums">
+            {formatBDTScale(revenueSeries.reduce((a, d) => a + d.revenue, 0))}
+          </span>
+        }
+      />
+      <div className="p-4">
+        <ChartContainer config={chartConfig} className="aspect-auto h-[220px] w-full">
+          <BarChart data={revenueSeries} margin={{ left: 4, right: 4, top: 4 }}>
+            <CartesianGrid vertical={false} strokeDasharray="2 4" />
+            <XAxis
+              dataKey="day"
+              tickLine={false}
+              axisLine={false}
+              tickMargin={10}
+              fontSize={11}
+            />
+            <YAxis
+              tickLine={false}
+              axisLine={false}
+              width={44}
+              fontSize={11}
+              tickFormatter={(v) => `${Number(v) / 1000}k`}
+            />
+            <ChartTooltip
+              content={
+                <ChartTooltipContent
+                  formatter={(value) => formatBDT(Number(value))}
+                />
+              }
+            />
+            <Bar dataKey="revenue" fill="var(--color-revenue)" radius={[3, 3, 0, 0]} />
+          </BarChart>
+        </ChartContainer>
+      </div>
+    </Panel>
+  );
+}
+
+function LanguageSplit() {
+  return (
+    <Panel>
+      <PanelHeader
+        title="Language of inbound messages"
+        description="What customers actually write in."
+      />
+      <div className="space-y-3 p-4">
+        {languageMix.map((l) => (
+          <div key={l.name}>
+            <div className="flex items-baseline justify-between text-[13px]">
+              <span>{l.name}</span>
+              <span className="font-mono tabular-nums">{l.value}%</span>
+            </div>
+            <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-muted">
+              <div
+                className="h-full rounded-full bg-foreground/70"
+                style={{ width: `${l.value}%` }}
+              />
             </div>
           </div>
         ))}
-      </section>
-
-      <section className="grid gap-6 xl:grid-cols-[1.4fr_0.6fr]">
-        <div className="space-y-6">
-          <div className="rounded-[1.7rem] border border-[#e7e2d7] bg-white p-4 shadow-sm">
-            <div className="flex items-center justify-between pb-3">
-              <div>
-                <div className="text-sm font-semibold uppercase tracking-[0.12em] text-[#0d5d45]">Live queue</div>
-                <h2 className="mt-1 text-xl font-semibold text-[#111827]">Priority conversations</h2>
-              </div>
-              <button type="button" className="text-sm font-medium text-[#0d5d45]">View all</button>
-            </div>
-
-            <div className="space-y-3">
-              {conversations.map((conversation) => (
-                <div key={conversation.customer} className="rounded-[1.2rem] border border-[#efe8df] bg-[#faf8f4] p-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <div className="font-medium text-[#111827]">{conversation.customer}</div>
-                      <div className="mt-1 text-xs text-[#667085]">{conversation.channel} • {conversation.intent}</div>
-                    </div>
-                    <div className="rounded-full bg-[#eaf7f1] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#0d5d45]">
-                      {conversation.status}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="rounded-[1.7rem] border border-[#e7e2d7] bg-white p-4 shadow-sm">
-            <div className="flex items-center justify-between pb-3">
-              <div>
-                <div className="text-sm font-semibold uppercase tracking-[0.12em] text-[#0d5d45]">Recent orders</div>
-                <h2 className="mt-1 text-xl font-semibold text-[#111827]">Latest transactions</h2>
-              </div>
-              <button type="button" className="text-sm font-medium text-[#0d5d45]">Open ledger</button>
-            </div>
-
-            <div className="overflow-hidden rounded-[1.2rem] border border-[#efe8df]">
-              <table className="min-w-full text-left text-sm">
-                <thead className="bg-[#f9f8f4] text-[#4b5563]">
-                  <tr>
-                    <th className="px-3 py-3 font-medium">Order</th>
-                    <th className="px-3 py-3 font-medium">Customer</th>
-                    <th className="px-3 py-3 font-medium">Product</th>
-                    <th className="px-3 py-3 font-medium">Amount</th>
-                    <th className="px-3 py-3 font-medium">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {orderRows.map((row) => (
-                    <tr key={row.id} className="border-t border-[#f0eae1] bg-white">
-                      <td className="px-3 py-3 font-medium text-[#111827]">{row.id}</td>
-                      <td className="px-3 py-3">{row.customer}</td>
-                      <td className="px-3 py-3">{row.product}</td>
-                      <td className="px-3 py-3 font-medium">{row.amount}</td>
-                      <td className="px-3 py-3">
-                        <span className="rounded-full bg-[#eaf7f1] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#0d5d45]">
-                          {row.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+        <div className="border-t pt-3">
+          <BenchmarkNote source={banglishBenchmark.source}>
+            Published {banglishBenchmark.label.toLowerCase()} tops out at{" "}
+            {banglishBenchmark.range}, so low-confidence classifications route to a
+            person rather than guess.
+          </BenchmarkNote>
         </div>
+      </div>
+    </Panel>
+  );
+}
 
-        <div className="space-y-6">
-          <div className="rounded-[1.7rem] border border-[#e7e2d7] bg-white p-4 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-sm font-semibold uppercase tracking-[0.12em] text-[#0d5d45]">Agent health</div>
-                <h2 className="mt-1 text-xl font-semibold text-[#111827]">Worker stack</h2>
-              </div>
-              <div className="rounded-full bg-[#edf7f1] p-2 text-[#0d5d45]">●</div>
-            </div>
+export default function OverviewPage() {
+  const { metrics } = useLive();
+  const mounted = useMounted();
+  const revenue = useSettledNumber(metrics.revenueAttributed);
+  const conversationCount = useSettledNumber(metrics.conversationsToday);
 
-            <div className="mt-4 space-y-3">
-              {agentCards.map((agent) => (
-                <div key={agent.name} className="rounded-[1.2rem] border border-[#efe8df] bg-[#faf8f4] p-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <div className="font-medium text-[#111827]">{agent.name}</div>
-                      <div className="mt-1 text-xs text-[#667085]">{agent.focus}</div>
-                    </div>
-                    <span className="rounded-full bg-[#eaf7f1] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#0d5d45]">
-                      {agent.state}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+  return (
+    <div className="space-y-5">
+      <PageHeader
+        title="Overview"
+        description="Everything the agent workforce is doing right now, and everything it was not allowed to do."
+        actions={
+          <>
+            <span className="inline-flex h-8 items-center rounded-md border px-2.5 text-xs text-muted-foreground">
+              Last 8 days
+            </span>
+            <Link
+              href="/admin/comments"
+              className="inline-flex h-8 items-center gap-1.5 rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90"
+            >
+              Watch a comment convert
+              <ArrowRight className="size-3.5" />
+            </Link>
+          </>
+        }
+      />
 
-          <div className="rounded-[1.7rem] border border-[#e7e2d7] bg-white p-4 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-sm font-semibold uppercase tracking-[0.12em] text-[#0d5d45]">Automation health</div>
-                <h2 className="mt-1 text-xl font-semibold text-[#111827]">Policy checks</h2>
-              </div>
-              <div className="rounded-full bg-[#edf7f1] p-2 text-[#0d5d45]">↗</div>
-            </div>
+      <MetricRow>
+        <Metric
+          label="Conversations today"
+          value={mounted ? conversationCount.toLocaleString("en-US") : "1,284"}
+          trend={{ direction: "up", amount: "23%" }}
+          basis="vs. 7-day average"
+        />
+        <Metric
+          label="Attributed revenue"
+          value={formatBDT(mounted ? revenue : metrics.revenueAttributed)}
+          trend={{ direction: "up", amount: "34%" }}
+          basis="vs. 7-day average"
+        />
+        <Metric
+          label="Resolved without a person"
+          value={`${metrics.containment.toFixed(1)}%`}
+          trend={{ direction: "up", amount: "6.8pt" }}
+          basis={`${metrics.blockedToday} calls blocked today`}
+        />
+        <Metric
+          label="Waiting on a person"
+          value={metrics.approvalsWaiting}
+          basis="approvals and escalations"
+        />
+      </MetricRow>
 
-            <div className="mt-4 space-y-4">
-              {[
-                { label: "Refund approvals", value: "21 / 24" },
-                { label: "Discount ceiling checks", value: "100%" },
-                { label: "PII redaction", value: "99.8%" },
-              ].map((item) => (
-                <div key={item.label}>
-                  <div className="mb-1 flex items-center justify-between text-sm text-[#374151]">
-                    <span>{item.label}</span>
-                    <span className="font-medium text-[#111827]">{item.value}</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-[#f1efe9]">
-                    <div
-                      className="h-2 rounded-full bg-[#0e5a43]"
-                      style={{ width: item.label.includes("Refund") ? "88%" : item.label.includes("Discount") ? "100%" : "99%" }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+        <div className="space-y-5">
+          <LiveActivity />
+          <Funnel />
         </div>
-      </section>
-
-      <section className="rounded-[1.7rem] border border-[#e7e2d7] bg-white p-4 shadow-sm">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-sm font-semibold uppercase tracking-[0.12em] text-[#0d5d45]">Latest actions</div>
-            <h2 className="mt-1 text-xl font-semibold text-[#111827]">Tool gateway events</h2>
-          </div>
-          <button type="button" className="inline-flex items-center gap-2 text-sm font-medium text-[#0d5d45]">
-            More details →
-          </button>
+        <div className="space-y-5">
+          <Workforce />
+          <NeedsAPerson />
         </div>
+      </div>
 
-        <div className="mt-4 grid gap-3 md:grid-cols-3">
-          {[
-            { title: "get_order_status", detail: "ORD-9316 → shipped · tracking confirmed" },
-            { title: "create_payment_link", detail: "Cart CV-221 → checkout link generated" },
-            { title: "apply_discount", detail: "Blocked by policy; Manager approval required" },
-          ].map((item) => (
-            <div key={item.title} className="rounded-[1.2rem] border border-[#efe8df] bg-[#faf8f4] p-3">
-              <div className="text-sm font-semibold text-[#111827]">{item.title}</div>
-              <div className="mt-2 text-sm text-[#4b5563]">{item.detail}</div>
-            </div>
-          ))}
-        </div>
-      </section>
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+        <RevenueChart />
+        <LanguageSplit />
+      </div>
     </div>
   );
 }

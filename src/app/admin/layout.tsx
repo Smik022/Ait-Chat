@@ -1,110 +1,271 @@
-'use client';
+"use client";
 
+import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Bell,
-  ArrowRight,
-  BriefcaseBusiness,
-  CreditCard,
+  BookOpen,
+  ChevronsUpDown,
   Gauge,
-  MessageSquareText,
-  Plug,
+  Inbox,
+  MessageSquareQuote,
   Package,
+  Pause,
+  Play,
+  Plug,
   Search,
   ShieldCheck,
   Users,
+  PanelLeft,
 } from "lucide-react";
 
+import { cn } from "@/lib/utils";
+import { merchant } from "@/lib/data";
+import { LiveProvider, useLive, useMounted } from "@/lib/live";
+import { LogoMark } from "@/components/logo";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { StatusDot } from "@/components/primitives";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { CommandMenu } from "@/components/command-menu";
+
 const navigation = [
-  { href: "/admin", label: "Overview", icon: Gauge },
-  { href: "/admin/conversations", label: "Conversations", icon: MessageSquareText },
-  { href: "/admin/agents", label: "Agents", icon: Users },
-  { href: "/admin/orders", label: "Orders", icon: Package },
-  { href: "/admin/payments", label: "Payments", icon: CreditCard },
-  { href: "/admin/operations", label: "Operations", icon: BriefcaseBusiness },
-  { href: "/admin/integrations", label: "Integration", icon: Plug },
+  {
+    group: null,
+    items: [{ href: "/admin", label: "Overview", icon: Gauge }],
+  },
+  {
+    group: "Conversations",
+    items: [
+      { href: "/admin/inbox", label: "Inbox", icon: Inbox },
+      { href: "/admin/comments", label: "Comments", icon: MessageSquareQuote },
+    ],
+  },
+  {
+    group: "Automation",
+    items: [
+      { href: "/admin/agents", label: "Agents", icon: Users },
+      { href: "/admin/guardrails", label: "Guardrails", icon: ShieldCheck },
+      { href: "/admin/knowledge", label: "Knowledge", icon: BookOpen },
+    ],
+  },
+  {
+    group: "Commerce",
+    items: [
+      { href: "/admin/orders", label: "Orders", icon: Package },
+      { href: "/admin/integrations", label: "Integrations", icon: Plug },
+    ],
+  },
 ];
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+function isActive(pathname: string, href: string) {
+  if (href === "/admin") return pathname === "/admin" || pathname === "/admin/";
+  return pathname.startsWith(href);
+}
+
+function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
 
   return (
-    <div className="min-h-screen bg-[#f4f5f7] text-[#111827]">
-      <div className="min-h-screen">
-        <aside className="fixed left-0 top-0 z-40 h-screen w-[286px] shrink-0 overflow-y-auto border-r border-[#e6e1d7] bg-white px-4 py-4">
-          <div className="flex items-center justify-between px-2">
-            <div>
-              <div className="text-lg font-semibold tracking-tight">Menu</div>
-              <div className="text-[10px] uppercase tracking-[0.18em] text-[#8b95a3]">Workspace</div>
-            </div>
+    <div className="flex h-full flex-col">
+      <div className="flex h-14 shrink-0 items-center gap-2.5 border-b px-4">
+        <LogoMark className="size-7 rounded-md" />
+        <div className="min-w-0 leading-tight">
+          <div className="truncate text-sm font-semibold tracking-tight">Ait-Chat</div>
+          <div className="truncate text-[11px] text-muted-foreground">
+            Social Commerce OS
           </div>
+        </div>
+      </div>
 
-          <nav className="mt-4 space-y-1.5">
-            {navigation.map(({ href, label, icon: Icon }) => {
-              const isActive = pathname === href;
-              return (
-                <Link
-                  key={label}
-                  href={href}
-                  className={`flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition ${
-                    isActive
-                      ? "bg-[#e9f3ff] text-[#2463eb] shadow-sm"
-                      : "text-[#344054] hover:bg-[#f3f6fa] hover:text-[#101828]"
-                  }`}
-                >
-                  <Icon className="h-4 w-4" />
-                  {label}
-                </Link>
-              );
-            })}
-          </nav>
+      <div className="border-b p-2">
+        <button
+          type="button"
+          className="flex w-full items-center gap-2.5 rounded-md p-2 text-left transition-colors hover:bg-sidebar-accent"
+        >
+          <span className="flex size-7 shrink-0 items-center justify-center rounded bg-foreground text-[11px] font-semibold text-background">
+            AT
+          </span>
+          <span className="min-w-0 flex-1 leading-tight">
+            <span className="block truncate text-[13px] font-medium">
+              {merchant.name}
+            </span>
+            <span className="block truncate text-[11px] text-muted-foreground">
+              {merchant.category}
+            </span>
+          </span>
+          <ChevronsUpDown className="size-3.5 shrink-0 text-muted-foreground" />
+        </button>
+      </div>
 
-          <div className="mt-5 rounded-[1.6rem] bg-[linear-gradient(180deg,#eef5ff,#dbeafe)] p-4 shadow-sm">
-            <div className="text-sm font-semibold text-[#102a43]">Unlock More Power!</div>
-            <p className="mt-2 text-xs leading-6 text-[#415a77]">
-              Upgrade to add more bots, more AI features, and deeper automation.
-            </p>
-            <button type="button" className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-[#18a64a] px-4 py-2 text-sm font-semibold text-white shadow-sm">
-              Upgrade Now
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </div>
-        </aside>
-
-        <main className="min-h-screen px-5 py-4 pl-[302px] lg:px-6 lg:py-5 lg:pl-[302px]">
-          <header className="sticky top-4 z-30 flex flex-col gap-4 rounded-[1.7rem] border border-[#e6e1d7] bg-white/95 p-4 shadow-sm backdrop-blur lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <div className="text-sm font-semibold uppercase tracking-[0.14em] text-[#2463eb]">Operations overview</div>
-              <h1 className="mt-1 text-2xl font-semibold tracking-tight text-[#101828]">AI commerce control room</h1>
-              <p className="mt-1 text-sm text-[#667085]">Select a workspace section, then inspect or deploy the underlying automation.</p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="hidden items-center gap-2 rounded-full border border-[#e8e3dc] bg-[#f8fafc] px-3 py-2 text-sm text-[#667085] md:flex">
-                <Search className="h-4 w-4" />
-                Search conversations
+      <nav className="flex-1 overflow-y-auto p-2">
+        {navigation.map((section, i) => (
+          <div key={section.group ?? "root"} className={cn(i > 0 && "mt-4")}>
+            {section.group ? (
+              <div className="px-2 pb-1.5 text-[11px] font-medium text-muted-foreground">
+                {section.group}
               </div>
-              <button type="button" className="rounded-full border border-[#e8e3dc] bg-[#fff] p-2.5 text-[#101828] shadow-sm">
-                <Bell className="h-4 w-4" />
-              </button>
-              <button type="button" className="inline-flex items-center gap-2 rounded-full border border-[#e8e3dc] bg-[#fff] px-3 py-2 text-sm font-medium text-[#344054] shadow-sm">
-                <ShieldCheck className="h-4 w-4 text-[#2463eb]" />
-                Safe mode
-              </button>
-              <Link
-                href="/"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-[#17284a] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#0f1e39]"
-              >
-                Landing page
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-          </header>
+            ) : null}
+            <ul className="space-y-0.5">
+              {section.items.map(({ href, label, icon: Icon }) => {
+                const active = isActive(pathname, href);
+                return (
+                  <li key={href}>
+                    <Link
+                      href={href}
+                      onClick={onNavigate}
+                      aria-current={active ? "page" : undefined}
+                      className={cn(
+                        "flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[13px] transition-colors",
+                        active
+                          ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
+                          : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground"
+                      )}
+                    >
+                      {/* Green is reserved for "allowed / paid / delivered". Using it
+                          for navigation state too would make the palette ambiguous. */}
+                      <Icon
+                        className={cn(
+                          "size-4 shrink-0",
+                          active ? "text-foreground" : "text-muted-foreground"
+                        )}
+                      />
+                      {label}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
+      </nav>
 
-          <div className="mt-5">{children}</div>
+      <div className="border-t p-3">
+        <p className="text-[11px] leading-relaxed text-muted-foreground">
+          Demonstration workspace. Every conversation, order and figure here is
+          illustrative. No channel or store is actually connected.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function LiveToggle() {
+  const { live, setLive, metrics } = useLive();
+  const mounted = useMounted();
+
+  return (
+    <button
+      type="button"
+      onClick={() => setLive((v) => !v)}
+      aria-pressed={live}
+      className="inline-flex h-8 items-center gap-2 rounded-md border px-2.5 text-xs font-medium transition-colors hover:bg-muted"
+    >
+      {live ? (
+        <StatusDot className="bg-live" pulse />
+      ) : (
+        <StatusDot className="bg-muted-foreground" />
+      )}
+      <span>{live ? "Live" : "Paused"}</span>
+      <span className="hidden font-mono tabular-nums text-muted-foreground sm:inline">
+        {mounted ? metrics.toolCallsToday.toLocaleString("en-US") : "0"}
+      </span>
+      {live ? (
+        <Pause className="size-3 text-muted-foreground" />
+      ) : (
+        <Play className="size-3 text-muted-foreground" />
+      )}
+    </button>
+  );
+}
+
+function Topbar({ onOpenNav }: { onOpenNav: () => void }) {
+  const [commandOpen, setCommandOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setCommandOpen((v) => !v);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  return (
+    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-3 border-b bg-background/85 px-4 backdrop-blur supports-backdrop-filter:bg-background/70">
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        className="lg:hidden"
+        onClick={onOpenNav}
+        aria-label="Open navigation"
+      >
+        <PanelLeft className="size-4" />
+      </Button>
+
+      <button
+        type="button"
+        onClick={() => setCommandOpen(true)}
+        className="flex h-8 min-w-0 flex-1 items-center gap-2 rounded-md border px-2.5 text-left text-[13px] text-muted-foreground transition-colors hover:bg-muted sm:max-w-xs"
+      >
+        <Search className="size-3.5 shrink-0" />
+        <span className="truncate">Search</span>
+        <kbd className="ml-auto hidden shrink-0 rounded border bg-muted px-1 font-mono text-[10px] sm:inline">
+          ⌘K
+        </kbd>
+      </button>
+
+      <div className="ml-auto flex items-center gap-2">
+        <LiveToggle />
+        <ThemeToggle />
+        <Link
+          href="/"
+          className="hidden h-8 items-center rounded-md border px-2.5 text-xs font-medium transition-colors hover:bg-muted sm:inline-flex"
+        >
+          Site
+        </Link>
+      </div>
+
+      <CommandMenu open={commandOpen} onOpenChange={setCommandOpen} />
+    </header>
+  );
+}
+
+function Shell({ children }: { children: React.ReactNode }) {
+  const [navOpen, setNavOpen] = React.useState(false);
+
+  return (
+    <div className="flex min-h-screen bg-background">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[248px] border-r bg-sidebar lg:block">
+        <SidebarBody />
+      </aside>
+
+      <Sheet open={navOpen} onOpenChange={setNavOpen}>
+        <SheetContent side="left" className="w-[280px] p-0">
+          <SheetTitle className="sr-only">Navigation</SheetTitle>
+          <SheetDescription className="sr-only">
+            Move between sections of the workspace.
+          </SheetDescription>
+          <SidebarBody onNavigate={() => setNavOpen(false)} />
+        </SheetContent>
+      </Sheet>
+
+      <div className="flex min-w-0 flex-1 flex-col lg:pl-[248px]">
+        <Topbar onOpenNav={() => setNavOpen(true)} />
+        <main className="flex-1 px-4 py-5 sm:px-6 sm:py-6">
+          <div className="mx-auto w-full max-w-[1400px]">{children}</div>
         </main>
       </div>
     </div>
+  );
+}
+
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <LiveProvider>
+      <Shell>{children}</Shell>
+    </LiveProvider>
   );
 }

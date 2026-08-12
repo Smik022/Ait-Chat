@@ -31,20 +31,16 @@ export function LogoMark({ className }: { className?: string }) {
   );
 }
 
-export function Logo({ className, variant = "wordmark" }: { className?: string; variant?: "wordmark" | "compact" }) {
+export function Logo({ className }: { className?: string }) {
   return (
     <span className={cn("inline-flex items-center gap-2.5", className)}>
-      <LogoMark className="h-8 w-8" />
-      {variant === "wordmark" && (
-        <span className="flex flex-col leading-none">
-          <span className="font-display text-lg font-semibold tracking-tight text-foreground">
-            Ait-Chat
-          </span>
-          <span className="mt-0.5 text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
-            Social Commerce OS
-          </span>
+      <LogoMark className="size-7 rounded-md" />
+      <span className="flex flex-col leading-tight">
+        <span className="text-sm font-semibold tracking-tight text-foreground">
+          Ait-Chat
         </span>
-      )}
+        <span className="text-[11px] text-muted-foreground">Social Commerce OS</span>
+      </span>
     </span>
   );
 }

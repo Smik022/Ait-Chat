@@ -1,247 +1,212 @@
 "use client";
 
-import { useState } from "react";
+import * as React from "react";
+import { AlertTriangle, Plus } from "lucide-react";
+
+import { integrations, type Integration } from "@/lib/data";
+import { BrandMark } from "@/components/brand-logos";
 import {
-  ArrowRight,
-  Database,
-  Globe,
-  MessageCircle,
-  Search,
-  Sparkles,
-} from "lucide-react";
+  Chip,
+  Metric,
+  MetricRow,
+  Mono,
+  PageHeader,
+  Panel,
+  PanelHeader,
+  StatusDot,
+} from "@/components/primitives";
 
-type IconProps = { className?: string };
-
-function InstagramIcon({ className }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden="true">
-      <defs>
-        <linearGradient id="ig-gradient" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#f58529" />
-          <stop offset="0.35" stopColor="#dd2a7b" />
-          <stop offset="0.7" stopColor="#8134af" />
-          <stop offset="1" stopColor="#515bd4" />
-        </linearGradient>
-      </defs>
-      <rect x="3" y="3" width="18" height="18" rx="5.5" stroke="url(#ig-gradient)" strokeWidth="1.9" />
-      <circle cx="12" cy="12" r="4" stroke="url(#ig-gradient)" strokeWidth="1.9" />
-      <circle cx="17" cy="6.8" r="1.2" fill="url(#ig-gradient)" />
-    </svg>
-  );
-}
-
-function FacebookIcon({ className }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden="true">
-      <circle cx="12" cy="12" r="10" fill="#1877f2" />
-      <path d="M13.6 8.2h1.6V6.1h-1.8c-2 0-3.4 1.2-3.4 3.5v1.8H8v2.2h1.9V18h2.3v-4.4H14l.4-2.2h-2.2v-1.4c0-.8.2-1.1 1.4-1.1Z" fill="#fff" />
-    </svg>
-  );
-}
-
-function WhatsAppIcon({ className }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden="true">
-      <circle cx="12" cy="12" r="10" fill="#25d366" />
-      <path
-        d="M8.5 16.1l.5-1.8a6.2 6.2 0 0 1-.9-3.2c0-3.3 2.7-6 6-6 3.1 0 5.6 2.4 5.6 5.5 0 3.4-2.7 6.1-6.1 6.1-1 .0-1.9-.2-2.8-.6l-2.3.6Z"
-        fill="white"
-        opacity="0.95"
-      />
-      <path
-        d="M9.8 9.6c.2-.4.4-.5.6-.5h.5c.2 0 .4.1.5.4l.6 1.3c.1.3.1.5 0 .7l-.3.4c-.1.2-.2.3 0 .6.2.4.7 1.2 1.5 1.9.8.8 1.6 1.2 2 1.4.2.1.4 0 .5-.1l.6-.4c.2-.1.4-.1.6 0l1.2.6c.2.1.3.3.3.5 0 .4-.2.8-.5 1-.4.4-.9.5-1.4.4-1-.2-2.2-.8-3.6-2.1-1.6-1.5-2.5-3.2-2.8-4.5-.1-.6 0-1.1.3-1.5Z"
-        fill="#25d366"
-      />
-    </svg>
-  );
-}
-
-function WordPressIcon({ className }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden="true">
-      <circle cx="12" cy="12" r="10" fill="#21759b" />
-      <path d="M6.8 7.7h2.1l1.4 5 1.1-3.5-.5-1.5h1.6l1.5 5 1.3-5h1.4l-2.1 7.8h-1.3l-1.6-5.1-1.5 5.1H9.3L6.8 7.7Z" fill="#fff" />
-    </svg>
-  );
-}
-
-function WebIcon({ className }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden="true">
-      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.7" />
-      <ellipse cx="12" cy="12" rx="4.5" ry="10" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M2.9 12h18.2M12 2.9v18.2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-const providers = [
+const GROUPS: { kind: Integration["kind"]; title: string; description: string }[] = [
   {
-    name: "Instagram",
-    status: "Connected",
-    description: "Comment-to-DM automation, shop replies, and reel lead capture.",
-    icon: InstagramIcon,
-    accent: "from-[#ffe8da] via-white to-white",
+    kind: "channel",
+    title: "Channels",
+    description: "Where customers actually talk to this business.",
   },
   {
-    name: "Facebook",
-    status: "Connected",
-    description: "Messenger support, lead routing, and campaign response handling.",
-    icon: FacebookIcon,
-    accent: "from-[#d8e7ff] via-white to-white",
+    kind: "commerce",
+    title: "Storefront",
+    description: "The source of truth for catalogue, stock and orders.",
   },
   {
-    name: "WhatsApp",
-    status: "Connected",
-    description: "Order updates, catalog links, and human handoff from chat.",
-    icon: WhatsAppIcon,
-    accent: "from-[#d5f7e1] via-white to-white",
+    kind: "logistics",
+    title: "Couriers",
+    description: "Live tracking, read at the moment a customer asks.",
   },
   {
-    name: "WordPress",
-    status: "Ready",
-    description: "Storefront sync, product data, and checkout embed hooks.",
-    icon: WordPressIcon,
-    accent: "from-[#ddeef8] via-white to-white",
-  },
-  {
-    name: "Website",
-    status: "Ready",
-    description: "Live chat, lead forms, and product intents from your site.",
-    icon: WebIcon,
-    accent: "from-[#efeadf] via-white to-white",
-  },
-  {
-    name: "Knowledge base",
-    status: "Synced",
-    description: "Grounding docs, FAQs, and policy files for agent retrieval.",
-    icon: Database,
-    accent: "from-[#edf1f2] via-white to-white",
+    kind: "crm",
+    title: "CRM",
+    description: "Where conversation context is written back.",
   },
 ];
 
-export default function IntegrationsPage() {
-  const [activeProvider, setActiveProvider] = useState(providers[0]);
-  const ActiveIcon = activeProvider.icon;
+const statusMeta = {
+  connected: { label: "Connected", tone: "bg-live-soft text-live-ink", dot: "bg-live" },
+  attention: { label: "Needs attention", tone: "bg-pend-soft text-pend-ink", dot: "bg-pend" },
+  available: { label: "Not connected", tone: "bg-muted text-muted-foreground", dot: "bg-muted-foreground" },
+} as const;
+
+function IntegrationRow({ item }: { item: Integration }) {
+  const meta = statusMeta[item.status];
+  const [open, setOpen] = React.useState(false);
 
   return (
-    <div className="space-y-6">
-      <section className="rounded-[1.7rem] border border-[#e7e2d7] bg-white p-5 shadow-sm">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#cde1d8] bg-[#edf7f1] px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-[#0d5d45]">
-              <Sparkles className="h-3.5 w-3.5" />
-              Integration gallery
+    <li>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/50"
+      >
+        <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded border bg-card">
+          <BrandMark brand={item.brand} className="size-4 text-foreground" />
+        </span>
+
+        <span className="min-w-0 flex-1">
+          <span className="flex flex-wrap items-center gap-2">
+            <span className="truncate text-[13px] font-medium">{item.name}</span>
+            <Chip tone={meta.tone}>
+              <StatusDot className={meta.dot} pulse={item.status === "attention"} />
+              {meta.label}
+            </Chip>
+          </span>
+          <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
+            {item.description}
+          </span>
+        </span>
+
+        <span className="hidden shrink-0 text-right sm:block">
+          <span className="block font-mono text-[11px] text-muted-foreground">
+            {item.account}
+          </span>
+          {item.lastEvent ? (
+            <span className="block text-[10px] text-muted-foreground">
+              {item.lastEvent}
+            </span>
+          ) : null}
+        </span>
+      </button>
+
+      {open ? (
+        <div className="border-t bg-muted/25 px-4 py-3">
+          {item.note ? (
+            <div className="mb-3 flex items-start gap-2 rounded-md border border-pend/30 bg-pend-soft px-2.5 py-1.5">
+              <AlertTriangle className="mt-0.5 size-3 shrink-0 text-pend" />
+              <p className="text-[11px] text-pend-ink">{item.note}</p>
             </div>
-            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-[#111827]">Connect the channels that actually drive revenue</h2>
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-[#4b5563]">
-              Each card is interactive. Pick a channel to preview how the connector behaves, what it powers,
-              and how it fits into the demo workflow.
-            </p>
-          </div>
-          <div className="rounded-[1.2rem] border border-[#e7e2d7] bg-[#faf8f4] px-4 py-3">
-            <div className="text-xs uppercase tracking-[0.16em] text-[#667085]">Connected channels</div>
-            <div className="mt-1 text-2xl font-semibold text-[#111827]">{providers.length}</div>
-          </div>
-        </div>
-      </section>
+          ) : null}
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {providers.map((provider) => {
-          const isActive = activeProvider.name === provider.name;
-          const Icon = provider.icon;
-
-          return (
-            <button
-              key={provider.name}
-              type="button"
-              onClick={() => setActiveProvider(provider)}
-              className={`rounded-[1.5rem] border bg-gradient-to-br p-4 text-left shadow-sm transition ${
-                isActive
-                  ? "border-[#0e5a43] bg-[#eff8f3]"
-                  : "border-[#e7e2d7] bg-white hover:border-[#d5ddd5] hover:shadow-md"
-              } ${provider.accent}`}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-start gap-3">
-                  <div className={`flex h-12 w-12 items-center justify-center rounded-2xl border border-white/70 bg-white shadow-sm ${provider.name === "WhatsApp" ? "text-[#25d366]" : provider.name === "Facebook" ? "text-[#1877f2]" : provider.name === "WordPress" ? "text-[#21759b]" : provider.name === "Website" ? "text-[#374151]" : "text-[#0d5d45]"}`}>
-                    <Icon className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <div className="text-lg font-semibold text-[#111827]">{provider.name}</div>
-                    <div className="mt-1 text-sm leading-6 text-[#667085]">{provider.description}</div>
-                  </div>
-                </div>
-                <div className="rounded-full bg-[#ffffff]/90 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#0d5d45] ring-1 ring-[#e7e2d7]">
-                  {provider.status}
-                </div>
+          {item.scopes.length ? (
+            <>
+              <h4 className="text-[11px] font-medium text-muted-foreground">
+                Permissions granted
+              </h4>
+              <div className="mt-1.5 flex flex-wrap gap-1.5">
+                {item.scopes.map((s) => (
+                  <Mono
+                    key={s}
+                    className="rounded border bg-card px-1.5 py-0.5 text-[11px]"
+                  >
+                    {s}
+                  </Mono>
+                ))}
               </div>
-            </button>
+              <p className="mt-2 text-[11px] text-muted-foreground">
+                Least privilege: only what the agents actually need to do their job.
+              </p>
+            </>
+          ) : (
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-[11px] text-muted-foreground">
+                Not connected. The adapter is built and ready.
+              </p>
+              <button
+                type="button"
+                className="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-md bg-primary px-2.5 text-[11px] font-medium text-primary-foreground transition-opacity hover:opacity-90"
+              >
+                <Plus className="size-3" />
+                Connect
+              </button>
+            </div>
+          )}
+        </div>
+      ) : null}
+    </li>
+  );
+}
+
+export default function IntegrationsPage() {
+  const connected = integrations.filter((i) => i.status === "connected").length;
+  const attention = integrations.filter((i) => i.status === "attention").length;
+
+  return (
+    <div className="space-y-5">
+      <PageHeader
+        title="Integrations"
+        description="Every channel and system the agents can reach, and exactly which permissions each one was granted."
+      />
+
+      <MetricRow>
+        <Metric label="Connected" value={connected} basis={`of ${integrations.length} available`} />
+        <Metric label="Channels live" value={3} basis="Instagram, Messenger, WhatsApp" />
+        <Metric label="Needs attention" value={attention} basis="courier over latency budget" />
+        <Metric label="Webhook events today" value="12,486" basis="ingested and deduplicated" />
+      </MetricRow>
+
+      <div className="grid gap-5 lg:grid-cols-2">
+        {GROUPS.map((g) => {
+          const items = integrations.filter((i) => i.kind === g.kind);
+          if (!items.length) return null;
+          return (
+            <Panel key={g.kind}>
+              <PanelHeader title={g.title} description={g.description} />
+              <ul className="divide-y">
+                {items.map((item) => (
+                  <IntegrationRow key={item.id} item={item} />
+                ))}
+              </ul>
+            </Panel>
           );
         })}
-      </section>
+      </div>
 
-      <section className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
-        <div className="rounded-[1.7rem] border border-[#e7e2d7] bg-white p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-sm font-semibold uppercase tracking-[0.12em] text-[#0d5d45]">Selected integration</div>
-              <h3 className="mt-1 text-2xl font-semibold text-[#111827]">{activeProvider.name}</h3>
-            </div>
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#edf7f1] text-[#0d5d45]">
-              <ActiveIcon className="h-6 w-6" />
-            </div>
-          </div>
-
-          <div className="mt-4 rounded-[1.4rem] border border-[#efe8df] bg-[#faf8f4] p-4">
-            <div className="text-sm text-[#667085]">Status</div>
-            <div className="mt-1 text-2xl font-semibold text-[#111827]">{activeProvider.status}</div>
-            <p className="mt-3 text-sm leading-7 text-[#4b5563]">{activeProvider.description}</p>
-          </div>
-
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            {[
-              { label: "Surface", value: activeProvider.name === "Website" ? "Web chat + forms" : "Commerce inbox" },
-              { label: "Primary use", value: activeProvider.name === "WordPress" ? "Store sync" : "Conversation routing" },
-            ].map((item) => (
-              <div key={item.label} className="rounded-2xl border border-[#efe8df] bg-white p-3">
-                <div className="text-xs uppercase tracking-[0.14em] text-[#667085]">{item.label}</div>
-                <div className="mt-2 text-sm font-semibold text-[#111827]">{item.value}</div>
+      <Panel>
+        <PanelHeader
+          title="How the connection works"
+          description="The same shape for every provider, which is what makes them swappable."
+        />
+        <ol className="divide-y">
+          {[
+            {
+              step: "Webhook in",
+              body: "Meta, Shopify and the couriers all push events. Each one is verified, deduplicated on its own event ID, and normalised into a single internal shape.",
+            },
+            {
+              step: "Normalise",
+              body: "Instagram, Messenger and WhatsApp differ in payload but not in meaning. One adapter each, one canonical message afterwards.",
+            },
+            {
+              step: "Route and act",
+              body: "The normalised event enters the agent stack. Anything the agents want to write goes back out through the gateway, never directly.",
+            },
+            {
+              step: "Reconcile",
+              body: "Stock and order state are re-read on demand rather than trusted from the last webhook, so a missed event cannot become a wrong answer.",
+            },
+          ].map((s, i) => (
+            <li key={s.step} className="flex gap-3 px-4 py-3">
+              <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-muted font-mono text-[10px] font-medium tabular-nums">
+                {i + 1}
+              </span>
+              <div className="min-w-0">
+                <h3 className="text-[12px] font-medium">{s.step}</h3>
+                <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
+                  {s.body}
+                </p>
               </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="rounded-[1.7rem] border border-[#e7e2d7] bg-white p-4 shadow-sm">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <div className="text-sm font-semibold uppercase tracking-[0.12em] text-[#0d5d45]">Demo flow</div>
-              <h3 className="mt-1 text-2xl font-semibold text-[#111827]">How the connector behaves</h3>
-            </div>
-            <Search className="h-5 w-5 text-[#0d5d45]" />
-          </div>
-
-          <div className="mt-4 space-y-3">
-            {[
-              "Connect channel credentials",
-              "Sync catalog and policy data",
-              "Route inbound messages into the agent stack",
-              "Show handoff, actions, and audit logs live",
-            ].map((step, index) => (
-              <div key={step} className="flex items-start gap-3 rounded-2xl border border-[#efe8df] bg-[#faf8f4] p-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0e5a43] text-xs font-semibold text-white">
-                  {index + 1}
-                </div>
-                <div className="text-sm leading-6 text-[#374151]">{step}</div>
-              </div>
-            ))}
-          </div>
-
-          <button type="button" className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#0e5a43] px-4 py-2 text-sm font-semibold text-white">
-            Open provider demo <ArrowRight className="h-4 w-4" />
-          </button>
-        </div>
-      </section>
+            </li>
+          ))}
+        </ol>
+      </Panel>
     </div>
   );
 }
