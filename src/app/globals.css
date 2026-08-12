@@ -73,26 +73,31 @@
 :root {
   --radius: 0.5rem;
 
-  --background: oklch(0.985 0 0);
-  --foreground: oklch(0.205 0.004 285);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.205 0.004 285);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.205 0.004 285);
+  /* Nothing here is at zero chroma. Flat grey is what makes an interface read as
+     clinical; the ground carries a little warmth and the ink a little blue. */
+  /* Deliberately a shade below the cards so white panels lift off the page
+     instead of relying on their border alone to be visible. */
+  --background: oklch(0.968 0.007 106);
+  --foreground: oklch(0.212 0.014 264);
+  --card: oklch(0.998 0.002 106);
+  --card-foreground: oklch(0.212 0.014 264);
+  --popover: oklch(0.998 0.002 106);
+  --popover-foreground: oklch(0.212 0.014 264);
 
-  /* Primary action is near-black, Vercel-register. The brand green is a state, not a button. */
-  --primary: oklch(0.235 0.005 285);
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.968 0.002 285);
-  --secondary-foreground: oklch(0.285 0.005 285);
-  --muted: oklch(0.968 0.002 285);
-  --muted-foreground: oklch(0.552 0.008 285);
-  --accent: oklch(0.968 0.002 285);
-  --accent-foreground: oklch(0.285 0.005 285);
+  /* Primary actions carry the brand green. Solid green means "this is the action";
+     the soft green tint below means "paid / allowed". Different weights, no clash. */
+  --primary: oklch(0.435 0.093 163);
+  --primary-foreground: oklch(0.985 0.012 163);
+  --secondary: oklch(0.961 0.008 106);
+  --secondary-foreground: oklch(0.285 0.014 264);
+  --muted: oklch(0.961 0.008 106);
+  --muted-foreground: oklch(0.522 0.019 264);
+  --accent: oklch(0.955 0.012 163);
+  --accent-foreground: oklch(0.285 0.014 264);
   --destructive: oklch(0.554 0.196 27.2);
-  --border: oklch(0.918 0.003 285);
-  --input: oklch(0.892 0.004 285);
-  --ring: oklch(0.44 0.084 163);
+  --border: oklch(0.909 0.008 106);
+  --input: oklch(0.881 0.01 106);
+  --ring: oklch(0.44 0.093 163);
 
   /* live / allowed / paid / positive — the inherited logo green */
   --live: oklch(0.44 0.084 163);
@@ -121,36 +126,38 @@
   --chart-4: oklch(0.505 0.17 296);
   --chart-5: oklch(0.62 0.1 200);
 
-  --sidebar: oklch(0.978 0.001 285);
-  --sidebar-foreground: oklch(0.325 0.005 285);
-  --sidebar-primary: oklch(0.44 0.084 163);
-  --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.942 0.002 285);
-  --sidebar-accent-foreground: oklch(0.235 0.005 285);
-  --sidebar-border: oklch(0.918 0.003 285);
-  --sidebar-ring: oklch(0.44 0.084 163);
+  --sidebar: oklch(0.955 0.009 106);
+  --sidebar-foreground: oklch(0.328 0.015 264);
+  --sidebar-primary: oklch(0.435 0.093 163);
+  --sidebar-primary-foreground: oklch(0.985 0.012 163);
+  --sidebar-accent: oklch(0.941 0.014 163);
+  --sidebar-accent-foreground: oklch(0.262 0.03 163);
+  --sidebar-border: oklch(0.909 0.008 106);
+  --sidebar-ring: oklch(0.44 0.093 163);
 }
 
 .dark {
-  --background: oklch(0.171 0.003 285);
-  --foreground: oklch(0.958 0.002 285);
-  --card: oklch(0.206 0.004 285);
-  --card-foreground: oklch(0.958 0.002 285);
-  --popover: oklch(0.226 0.004 285);
-  --popover-foreground: oklch(0.958 0.002 285);
+  /* Lifted well off near-black and given a cool cast. A void reads as cheap;
+     a considered dark surface has a hue and a visible step between its layers. */
+  --background: oklch(0.207 0.013 258);
+  --foreground: oklch(0.957 0.005 258);
+  --card: oklch(0.246 0.015 258);
+  --card-foreground: oklch(0.957 0.005 258);
+  --popover: oklch(0.268 0.016 258);
+  --popover-foreground: oklch(0.957 0.005 258);
 
-  --primary: oklch(0.958 0.002 285);
-  --primary-foreground: oklch(0.196 0.004 285);
-  --secondary: oklch(0.262 0.005 285);
-  --secondary-foreground: oklch(0.938 0.002 285);
-  --muted: oklch(0.253 0.005 285);
-  --muted-foreground: oklch(0.686 0.008 285);
-  --accent: oklch(0.278 0.005 285);
-  --accent-foreground: oklch(0.958 0.002 285);
+  --primary: oklch(0.72 0.132 163);
+  --primary-foreground: oklch(0.196 0.035 163);
+  --secondary: oklch(0.298 0.016 258);
+  --secondary-foreground: oklch(0.94 0.005 258);
+  --muted: oklch(0.288 0.015 258);
+  --muted-foreground: oklch(0.719 0.014 258);
+  --accent: oklch(0.318 0.022 200);
+  --accent-foreground: oklch(0.957 0.005 258);
   --destructive: oklch(0.66 0.18 25);
-  --border: oklch(1 0 0 / 11%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.66 0.1 163);
+  --border: oklch(1 0 0 / 13%);
+  --input: oklch(1 0 0 / 17%);
+  --ring: oklch(0.72 0.12 163);
 
   --live: oklch(0.7 0.115 163);
   --live-soft: oklch(0.29 0.045 163);
@@ -174,14 +181,14 @@
   --chart-4: oklch(0.665 0.15 297);
   --chart-5: oklch(0.72 0.09 200);
 
-  --sidebar: oklch(0.196 0.004 285);
-  --sidebar-foreground: oklch(0.885 0.003 285);
-  --sidebar-primary: oklch(0.7 0.115 163);
-  --sidebar-primary-foreground: oklch(0.18 0.01 163);
-  --sidebar-accent: oklch(0.268 0.005 285);
-  --sidebar-accent-foreground: oklch(0.958 0.002 285);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.66 0.1 163);
+  --sidebar: oklch(0.232 0.015 258);
+  --sidebar-foreground: oklch(0.888 0.006 258);
+  --sidebar-primary: oklch(0.72 0.132 163);
+  --sidebar-primary-foreground: oklch(0.196 0.035 163);
+  --sidebar-accent: oklch(0.315 0.028 175);
+  --sidebar-accent-foreground: oklch(0.957 0.005 258);
+  --sidebar-border: oklch(1 0 0 / 12%);
+  --sidebar-ring: oklch(0.72 0.12 163);
 }
 
 @layer base {
