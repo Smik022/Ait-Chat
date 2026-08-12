@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" role="img" aria-label="Ait-Chat">
+  <defs>
+    <linearGradient id="ait-favicon" x1="4" y1="2" x2="36" y2="38" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1d7a5f" />
+      <stop offset="0.55" stop-color="#0f5d46" />
+      <stop offset="1" stop-color="#0a3d2f" />
+    </linearGradient>
+  </defs>
+  <rect width="40" height="40" rx="9" fill="url(#ait-favicon)" />
+  <path d="M20 8 30.2 29.8h-4.8L20 17.6l-5.4 12.2H9.8L20 8Z" fill="#ffffff" />
+</svg>
