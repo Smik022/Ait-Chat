@@ -25,6 +25,7 @@ import {
   formatBDT,
   humanTeam,
   langTag,
+  orderDraftDemo,
   orders,
   outcomeMeta,
   productById,
@@ -497,6 +498,125 @@ function ContextRail({ conversation }: { conversation: Conversation }) {
   );
 }
 
+/* ------------------------------ Take the order ---------------------------- */
+
+function TakeOrder({ customer }: { customer: string }) {
+  const [flat, setFlat] = React.useState("");
+  const [ringFirst, setRingFirst] = React.useState(true);
+  const [done, setDone] = React.useState(false);
+  const total = orderDraftDemo.itemTotal + orderDraftDemo.deliveryCharge;
+
+  if (done) {
+    return (
+      <div
+        role="status"
+        className="mx-4 mb-3 rounded-md border border-live/40 bg-live-soft px-3 py-2.5"
+      >
+        <div className="flex items-center gap-2">
+          <Check className="size-3.5 shrink-0 text-live" strokeWidth={3} />
+          <span className="text-[13px] font-medium">Order created</span>
+        </div>
+        <p className="mt-1 text-[12px] leading-relaxed text-live-ink">
+          {formatBDT(total)} to {customer}, cash on delivery.
+          {ringFirst ? " Flagged to ring before it ships." : ""}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-4 mb-3 overflow-hidden rounded-md border border-machine/40">
+      <div className="border-b border-machine/25 bg-machine-soft px-3 py-2">
+        <p className="text-[12px] font-medium text-machine-ink">
+          They have sent their details
+        </p>
+        <p className="mt-0.5 text-[11px] text-machine-ink/85">
+          Pulled out of their message. Check it before you create the order.
+        </p>
+      </div>
+
+      <dl className="divide-y">
+        {orderDraftDemo.fields.map((f) => (
+          <div key={f.label} className="flex items-baseline gap-3 px-3 py-1.5">
+            <dt className="w-16 shrink-0 text-[11px] text-muted-foreground">{f.label}</dt>
+            <dd className="flex-1 text-[12px] font-medium">{f.value}</dd>
+            {f.note ? (
+              <dd className="shrink-0 text-[10px] text-muted-foreground">{f.note}</dd>
+            ) : null}
+          </div>
+        ))}
+      </dl>
+
+      {orderDraftDemo.missing.map((m) => (
+        <div key={m.question} className="border-t bg-pend-soft px-3 py-2">
+          <label htmlFor="flat" className="text-[12px] font-medium text-pend-ink">
+            {m.question}
+          </label>
+          <p className="mt-0.5 text-[11px] text-pend-ink/85">{m.why}</p>
+          <input
+            id="flat"
+            value={flat}
+            onChange={(e) => setFlat(e.target.value)}
+            placeholder="e.g. 5B"
+            className="mt-1.5 h-8 w-28 rounded-md border bg-background px-2.5 text-[13px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+          />
+        </div>
+      ))}
+
+      <div className="border-t px-3 py-2">
+        <dl className="space-y-1 text-[12px]">
+          <div className="flex justify-between">
+            <dt className="text-muted-foreground">Item</dt>
+            <dd className="font-mono tabular-nums">
+              {formatBDT(orderDraftDemo.itemTotal)}
+            </dd>
+          </div>
+          <div className="flex justify-between">
+            <dt className="text-muted-foreground">Delivery</dt>
+            <dd className="font-mono tabular-nums">
+              {formatBDT(orderDraftDemo.deliveryCharge)}
+            </dd>
+          </div>
+          <div className="flex justify-between border-t pt-1 font-medium">
+            <dt>They pay the rider</dt>
+            <dd className="font-mono tabular-nums">{formatBDT(total)}</dd>
+          </div>
+        </dl>
+
+        <label className="mt-2.5 flex cursor-pointer items-start gap-2">
+          <input
+            type="checkbox"
+            checked={ringFirst}
+            onChange={(e) => setRingFirst(e.target.checked)}
+            className="mt-0.5 size-3.5 shrink-0 accent-foreground"
+          />
+          <span className="text-[11px] leading-relaxed">
+            Ring her before it ships.{" "}
+            <span className="text-muted-foreground">
+              Unconfirmed cash orders are the ones that come back.
+            </span>
+          </span>
+        </label>
+
+        <button
+          type="button"
+          disabled={!flat.trim()}
+          onClick={() => setDone(true)}
+          className="mt-2.5 inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-md bg-primary text-[13px] font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
+        >
+          Create the order
+        </button>
+        {!flat.trim() ? (
+          <p className="mt-1.5 text-[11px] text-muted-foreground">
+            Add the flat first. A rider standing outside with no flat number is how
+            a parcel comes back.
+          </p>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 /* --------------------------------- Page ---------------------------------- */
 
 function InboxInner() {
@@ -572,6 +692,10 @@ function InboxInner() {
             <MessageBubble key={m.id} message={m} showGloss={showGloss} />
           ))}
         </ul>
+
+        {!conversation.orderId && conversation.id === "CV-222" ? (
+          <TakeOrder customer={conversation.customer} />
+        ) : null}
 
         <div className="shrink-0 border-t p-3">
           {isHuman ? (

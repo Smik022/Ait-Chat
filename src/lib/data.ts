@@ -584,7 +584,79 @@ export interface Conversation {
   messages: Message[];
 }
 
+/**
+ * The step she does fifty times a day. The customer sends everything as one
+ * run-on line, and turning that into a bookable order is the single most useful
+ * thing software can do for her. Note what is NOT inferred: the flat is missing
+ * from the address, and that gets asked rather than guessed.
+ */
+export interface OrderDraft {
+  raw: string;
+  fields: { label: string; value: string; note?: string }[];
+  missing: { question: string; why: string }[];
+  deliveryCharge: number;
+  itemTotal: number;
+}
+
+export const orderDraftDemo: OrderDraft = {
+  raw: "apu ei ta lagbe. Rehana Sultana 01712345678 house 42 road 8 block c bashundhara ra dhaka 1229. cod e nibo",
+  fields: [
+    { label: "Name", value: "Rehana Sultana" },
+    { label: "Phone", value: "01712-345678", note: "Grameenphone" },
+    { label: "Address", value: "House 42, Road 8, Block C, Bashundhara R/A", note: "tidied up" },
+    { label: "Area", value: "Bashundhara, Dhaka-1229", note: "Dhaka Metro, so ৳80" },
+    { label: "Paying by", value: "Cash on delivery", note: "from “cod e nibo”" },
+  ],
+  missing: [
+    {
+      question: "Which flat?",
+      why: "The road and house are there but not the flat. Riders ring from downstairs.",
+    },
+  ],
+  itemTotal: 1290,
+  deliveryCharge: 80,
+};
+
 export const conversations: Conversation[] = [
+  {
+    id: "CV-222",
+    customer: "Rehana Sultana",
+    handle: "@rehana.s",
+    initials: "RS",
+    channel: "instagram",
+    agent: "sales",
+    intent: "Placing an order",
+    sentiment: "positive",
+    language: "banglish",
+    languageConfidence: 0.92,
+    intentConfidence: 0.96,
+    time: "now",
+    unread: 1,
+    status: "active",
+    window: { kind: "24h", label: "Standard 24h window", remaining: "23h 58m", pct: 99 },
+    origin: "Comment on “Summer edit” post",
+    messages: [
+      {
+        id: "m1", author: "customer", text: "Chaya kurti ta XL te ache?",
+        gloss: "Do you have the Chaya kurti in XL?", time: "11:02", language: "banglish",
+      },
+      {
+        id: "m2", author: "agent", agent: "sales",
+        text: "Ji apu, XL ache. ৳1,290, ar Dhaka te delivery ৳80. Nibe?",
+        gloss: "Yes apu, XL is available. ৳1,290, and delivery in Dhaka is ৳80. Shall I take it?",
+        time: "11:02", language: "banglish", confidence: 0.95, productRef: "P-1042",
+        tools: [
+          { id: "t1", tool: "check_inventory", args: { item: "Chaya Cotton Kurti", size: "XL" }, outcome: "allowed", detail: "6 left in XL", latencyMs: 280 },
+        ],
+      },
+      {
+        id: "m3", author: "customer",
+        text: "apu ei ta lagbe. Rehana Sultana 01712345678 house 42 road 8 block c bashundhara ra dhaka 1229. cod e nibo",
+        gloss: "Apu I need this one. Rehana Sultana, 01712345678, house 42 road 8 block C Bashundhara R/A Dhaka 1229. I'll take cash on delivery.",
+        time: "11:04", language: "banglish",
+      },
+    ],
+  },
   {
     id: "CV-221",
     customer: "Tasnim Rahman",
