@@ -8,7 +8,7 @@ web
 
 ## Users
 
-**Primary: the F-commerce merchant operator.** A Bangladeshi retail brand running sales through Instagram, Facebook Pages, and WhatsApp rather than (or alongside) a storefront. One to five people handle everything: replying to comments on a new post, answering "price?" fifty times, quoting sizes, taking orders in DMs, chasing delivery status, and processing returns. They are overwhelmed at exactly the moment they are succeeding — a post goes viral and the inbox becomes unanswerable.
+**Primary: the page-only seller.** A Bangladeshi trader whose entire business is a Facebook page, an Instagram account and a WhatsApp number. No website, no store software, no accounting system. Around 50 to 70 percent of these businesses are women-owned, many run from home on a phone. One to five people handle everything: replying to comments on a new post, answering "price?" fifty times, quoting sizes, taking orders in DMs, chasing delivery status, and processing returns. They are overwhelmed at exactly the moment they are succeeding — a post goes viral and the inbox becomes unanswerable.
 
 **Secondary: the human agent inside that team.** Works an inbox, needs escalated conversations to arrive with context already attached, and needs to take over a conversation mid-flight without the customer noticing a seam.
 
@@ -35,7 +35,7 @@ Two mechanisms a neighboring product cannot truthfully copy today:
 
 - **Channels:** Instagram (comments, DMs, story replies), Facebook Messenger, WhatsApp Business Cloud API, web chat. All four are webhook-driven; Meta's three run on the same graph infrastructure.
 - **Hard platform rules that shape the product:** a private reply to a comment is a single message within 7 days; a 24-hour messaging window opens only when the customer responds; WhatsApp requires approved templates outside its customer-service window; every automated messaging app must offer a human escalation path.
-- **Commerce systems:** Shopify Admin API and WooCommerce REST v3 as sources of truth for catalog, stock, and orders. Live transactional data is fetched, never embedded in a vector store.
+- **No commerce platform.** The defining constraint of this user. They have a page and a phone, not a storefront. There is no Shopify or WooCommerce behind them to hold the catalogue, so the catalogue, stock counts and order records live inside Ait-Chat itself. Anything the agents quote about a product traces back to something the seller entered or confirmed, never to a guess.
 - **Local commerce reality:** ৳ BDT pricing, cash on delivery as a first-class payment path alongside bKash and Nagad, Pathao-style courier tracking, Dhaka/outside-Dhaka delivery split.
 - **Language reality:** customers write Bangla in Bengali script, Bangla in Roman script (Banglish), English, and code-switch mid-sentence. Published Banglish sentiment accuracy tops out around 67%, so confidence must be visible and low confidence must not drive money decisions.
 
@@ -74,7 +74,7 @@ Two mechanisms a neighboring product cannot truthfully copy today:
 **Not real — must never be presented as fact:**
 
 - There are no customers, no pilot merchants, no live deployments, and no production metrics.
-- No integration is actually connected; no Shopify store, Meta app, or WhatsApp number is live.
+- No integration is actually connected; no Meta app, WhatsApp number, or courier account is live.
 - Every merchant, customer, conversation, order, and number in the interface is an illustrative demonstration scenario.
 - No testimonials, customer logos, press mentions, certifications, awards, uptime figures, or funding claims exist. None may be invented or implied.
 

@@ -865,11 +865,12 @@ export default function Home() {
             <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
               <div className="max-w-md">
                 <h2 className="text-2xl font-semibold tracking-tight">
-                  Sits on top of what you already run
+                  You do not need a shop to run a shop
                 </h2>
                 <p className="mt-3 text-base leading-relaxed text-muted-foreground">
-                  Adapters written for each of these. None is connected in this build.
-                  The demo runs entirely on illustrative data.
+                  No website, no Shopify, no store software. If you have a page and a
+                  phone number, that is enough. Your products live here, and so does
+                  everything the agents need to know.
                 </p>
               </div>
 
@@ -883,10 +884,6 @@ export default function Home() {
                     {i.name}
                   </span>
                 ))}
-                <span className="inline-flex items-center gap-2 rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground">
-                  <BrandMark brand="woocommerce" className="size-4" />
-                  WooCommerce
-                </span>
               </div>
             </div>
 

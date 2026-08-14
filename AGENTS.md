@@ -23,8 +23,10 @@ figure on screen is authored demo material. Read `PRODUCT.md` before making
 product decisions; it holds the confirmed product truth and the constraints.
 
 The nine documents in `research/` are real research (August 2026) into Meta's
-messaging APIs, multi-agent orchestration, Banglish NLP, Shopify/WooCommerce,
-competitors, RAG and guardrails. They are the source of the domain facts the
+messaging APIs, multi-agent orchestration, Banglish NLP, e-commerce platforms,
+competitors, RAG and guardrails. Note that the platform-integration research is
+now background only: this product is built for sellers who have no store
+software at all, so the catalogue lives inside Ait-Chat. They are the source of the domain facts the
 interface asserts. If you need to know why something works the way it does, the
 answer is usually in there.
 

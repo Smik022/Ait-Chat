@@ -29,7 +29,8 @@ export const merchant = {
   handle: "@athelier",
   category: "Women's wear · Handloom",
   city: "Dhaka",
-  storefront: "athelier.myshopify.com",
+  /** A page and a phone number. There is no website and no storefront. */
+  page: "facebook.com/athelier",
   whatsapp: "+880 1XXX-XXXXXX",
 };
 
@@ -291,9 +292,9 @@ If anyone asks to stop hearing from us, stop immediately and confirm that you ha
   {
     id: "operations",
     name: "Operations",
-    title: "Catalogue & systems",
-    focus: "Keeps stock, CRM contacts and courier state in sync across connected systems.",
-    escalation: "Connector failure, or a sync conflict it cannot resolve.",
+    title: "Catalogue & stock",
+    focus: "Keeps the catalogue accurate, counts stock down as orders go out, and flags what is running low.",
+    escalation: "Stock looks wrong, or a courier stops responding.",
     status: "online",
     tools: ["sync_inventory", "update_crm_contact", "check_logistics"],
     handlesNow: 0,
@@ -304,11 +305,11 @@ If anyone asks to stop hearing from us, stop immediately and confirm that you ha
     maxTokens: 400,
     tone: "brief",
     languagePolicy: "english",
-    systemPrompt: `You keep the connected systems in agreement. You do not talk to customers.
+    systemPrompt: `You keep the catalogue honest. You do not talk to customers.
 
-Report discrepancies rather than quietly resolving them. If Shopify and WooCommerce disagree about stock, surface both numbers and say which one you trust and why.
+Count stock down as orders go out and put it back when one is returned. Flag anything running low early, while there is still time to restock.
 
-If a connector is slow or failing, flag it before it turns into a wrong answer somewhere downstream.`,
+Never invent a product detail. If a size, colour or material was not entered by the shop owner, say it is unknown and ask her rather than filling the gap. She is the one answering for it if a customer is told something wrong.`,
   },
   {
     id: "manager",
@@ -347,6 +348,12 @@ export const humanTeam = [
 
 /* -------------------------------- Products ------------------------------- */
 
+/**
+ * The catalogue lives here, not in a storefront. The sellers this is built for
+ * run a Facebook page and nothing else, so there is no Shopify or WooCommerce
+ * behind it to be the source of truth. Every field was either typed by the
+ * seller or confirmed by her, never guessed from a photo.
+ */
 export interface Product {
   id: string;
   name: string;
@@ -354,22 +361,53 @@ export interface Product {
   price: number;
   compareAt: number | null;
   stock: number;
-  variants: string;
+  sizes: string[];
+  colours: string[];
+  material: string;
   status: "in-stock" | "low-stock" | "out-of-stock" | "restocking";
   sold: number;
-  source: "Shopify" | "WooCommerce";
+  /** How it got into the catalogue. */
+  addedVia: "photo" | "reply" | "manual";
+  addedOn: string;
 }
 
 export const products: Product[] = [
-  { id: "SKU-1042", name: "Chaya Cotton Kurti", category: "Kurti", price: 1290, compareAt: 1650, stock: 42, variants: "S–XL · 3 colours", status: "in-stock", sold: 320, source: "Shopify" },
-  { id: "SKU-1098", name: "Nandini Embroidered Kurti", category: "Kurti", price: 1590, compareAt: null, stock: 8, variants: "M–XL · Sage", status: "low-stock", sold: 141, source: "Shopify" },
-  { id: "SKU-1155", name: "Milan Anarkali Gown", category: "Gown", price: 2450, compareAt: 2900, stock: 0, variants: "M · Ivory", status: "out-of-stock", sold: 87, source: "Shopify" },
-  { id: "SKU-1207", name: "Dhakai Jamdani Saree", category: "Saree", price: 3890, compareAt: 4500, stock: 14, variants: "Free size · Cream", status: "in-stock", sold: 203, source: "Shopify" },
-  { id: "SKU-1212", name: "Tangail Cotton Saree", category: "Saree", price: 2190, compareAt: null, stock: 3, variants: "Free size · Mustard", status: "low-stock", sold: 119, source: "Shopify" },
-  { id: "SKU-1330", name: "Leather Block-Heel Sandal", category: "Footwear", price: 1980, compareAt: 2400, stock: 26, variants: "36–41 · Tan", status: "in-stock", sold: 174, source: "WooCommerce" },
-  { id: "SKU-1388", name: "Terracotta Earrings", category: "Accessories", price: 490, compareAt: null, stock: 61, variants: "One size · Rust", status: "in-stock", sold: 402, source: "WooCommerce" },
-  { id: "SKU-1410", name: "Silk Dupatta", category: "Accessories", price: 890, compareAt: 1200, stock: 0, variants: "Free size · Emerald", status: "restocking", sold: 95, source: "Shopify" },
+  { id: "P-1042", name: "Chaya Cotton Kurti", category: "Kurti", price: 1290, compareAt: 1650, stock: 42, sizes: ["S", "M", "L", "XL"], colours: ["Dusty rose", "Sage", "Ivory"], material: "Cotton", status: "in-stock", sold: 320, addedVia: "photo", addedOn: "02 Aug" },
+  { id: "P-1098", name: "Nandini Embroidered Kurti", category: "Kurti", price: 1590, compareAt: null, stock: 8, sizes: ["M", "L", "XL"], colours: ["Sage"], material: "Cotton with embroidery", status: "low-stock", sold: 141, addedVia: "photo", addedOn: "04 Aug" },
+  { id: "P-1155", name: "Milan Anarkali Gown", category: "Gown", price: 2450, compareAt: 2900, stock: 0, sizes: ["M"], colours: ["Ivory"], material: "Georgette", status: "out-of-stock", sold: 87, addedVia: "manual", addedOn: "28 Jul" },
+  { id: "P-1207", name: "Dhakai Jamdani Saree", category: "Saree", price: 3890, compareAt: 4500, stock: 14, sizes: ["Free size"], colours: ["Cream"], material: "Handloom cotton", status: "in-stock", sold: 203, addedVia: "photo", addedOn: "29 Jul" },
+  { id: "P-1212", name: "Tangail Cotton Saree", category: "Saree", price: 2190, compareAt: null, stock: 3, sizes: ["Free size"], colours: ["Mustard"], material: "Cotton", status: "low-stock", sold: 119, addedVia: "reply", addedOn: "06 Aug" },
+  { id: "P-1330", name: "Leather Block-Heel Sandal", category: "Footwear", price: 1980, compareAt: 2400, stock: 26, sizes: ["36", "37", "38", "39", "40", "41"], colours: ["Tan"], material: "Leather", status: "in-stock", sold: 174, addedVia: "photo", addedOn: "31 Jul" },
+  { id: "P-1388", name: "Terracotta Earrings", category: "Accessories", price: 490, compareAt: null, stock: 61, sizes: ["One size"], colours: ["Rust"], material: "Terracotta", status: "in-stock", sold: 402, addedVia: "manual", addedOn: "24 Jul" },
+  { id: "P-1410", name: "Silk Dupatta", category: "Accessories", price: 890, compareAt: 1200, stock: 0, sizes: ["Free size"], colours: ["Emerald"], material: "Silk", status: "restocking", sold: 95, addedVia: "reply", addedOn: "01 Aug" },
 ];
+
+export const addedViaMeta: Record<Product["addedVia"], string> = {
+  photo: "From a photo",
+  reply: "From your reply",
+  manual: "Typed in",
+};
+
+/**
+ * Adding a product: the seller types the way she thinks, and the model pulls
+ * structure out of it. It extracts what she said. It never invents an attribute
+ * she did not state, because she is the one liable for the claim.
+ */
+export const catalogueDraft = {
+  typed: "nokshi kurti 1450 M L XL cotton 2 colour maroon r navy",
+  extracted: [
+    { field: "Name", value: "Nokshi Kurti", note: "from what you typed" },
+    { field: "Price", value: "৳1,450", note: "from what you typed" },
+    { field: "Sizes", value: "M, L, XL", note: "from what you typed" },
+    { field: "Material", value: "Cotton", note: "from what you typed" },
+    { field: "Colours", value: "Maroon, Navy", note: "“r” read as “and”" },
+    { field: "Category", value: "Kurti", note: "matched to your other kurtis" },
+  ],
+  asks: [
+    { question: "How many do you have?", why: "Needed before it can quote stock to anyone." },
+    { question: "Is the price the same in every size?", why: "Sellers often charge more for XL." },
+  ],
+};
 
 export const productById = (id: string) => products.find((p) => p.id === id);
 
@@ -423,7 +461,7 @@ export interface Order {
 
 export const orders: Order[] = [
   {
-    id: "ORD-9317", customer: "Rafiul Islam", phone: "01711-224500", sku: "SKU-1042",
+    id: "ORD-9317", customer: "Rafiul Islam", phone: "01711-224500", sku: "P-1042",
     product: "Chaya Cotton Kurti", qty: 2, amount: 2580, channel: "instagram", agent: "sales",
     status: "shipped", placed: "09 Aug", eta: "14 Aug", tracking: "BD00182917", courier: "Pathao",
     zone: "Dhaka Metro", payment: "bKash", paymentState: "paid", conversationId: "CV-220",
@@ -436,7 +474,7 @@ export const orders: Order[] = [
     ],
   },
   {
-    id: "ORD-9316", customer: "Tasnim Rahman", phone: "01818-993210", sku: "SKU-1207",
+    id: "ORD-9316", customer: "Tasnim Rahman", phone: "01818-993210", sku: "P-1207",
     product: "Dhakai Jamdani Saree", qty: 1, amount: 3890, channel: "facebook", agent: "sales",
     status: "processing", placed: "10 Aug", eta: "15 Aug", tracking: "BD00182909", courier: "Pathao",
     zone: "Dhaka Metro", payment: "Nagad", paymentState: "paid", conversationId: "CV-221",
@@ -448,7 +486,7 @@ export const orders: Order[] = [
     ],
   },
   {
-    id: "ORD-9315", customer: "Nusrat Jahan", phone: "01677-120984", sku: "SKU-1212",
+    id: "ORD-9315", customer: "Nusrat Jahan", phone: "01677-120984", sku: "P-1212",
     product: "Tangail Cotton Saree", qty: 1, amount: 2190, channel: "whatsapp", agent: "support",
     status: "delivered", placed: "05 Aug", eta: "11 Aug", tracking: "BD00182902", courier: "Steadfast",
     zone: "Outside Dhaka", payment: "Cash on delivery", paymentState: "paid",
@@ -461,7 +499,7 @@ export const orders: Order[] = [
     ],
   },
   {
-    id: "ORD-9308", customer: "Md. Sabbir Ahmed", phone: "01512-345673", sku: "SKU-1330",
+    id: "ORD-9308", customer: "Md. Sabbir Ahmed", phone: "01512-345673", sku: "P-1330",
     product: "Leather Block-Heel Sandal", qty: 1, amount: 1980, channel: "facebook", agent: "retention",
     status: "returned", placed: "02 Aug", eta: "n/a", tracking: "BD00182849", courier: "RedX",
     zone: "Outside Dhaka", payment: "Cash on delivery", paymentState: "uncollected",
@@ -474,7 +512,7 @@ export const orders: Order[] = [
     ],
   },
   {
-    id: "ORD-9314", customer: "Shakil Ahmed", phone: "01922-845671", sku: "SKU-1330",
+    id: "ORD-9314", customer: "Shakil Ahmed", phone: "01922-845671", sku: "P-1330",
     product: "Leather Block-Heel Sandal", qty: 1, amount: 1980, channel: "instagram", agent: "manager",
     status: "return-requested", placed: "06 Aug", eta: "n/a", tracking: "BD00182894", courier: "Pathao",
     zone: "Dhaka Metro", payment: "Card", paymentState: "paid", conversationId: "CV-218",
@@ -487,7 +525,7 @@ export const orders: Order[] = [
     ],
   },
   {
-    id: "ORD-9313", customer: "Mehedi Hasan", phone: "01521-447803", sku: "SKU-1388",
+    id: "ORD-9313", customer: "Mehedi Hasan", phone: "01521-447803", sku: "P-1388",
     product: "Terracotta Earrings", qty: 3, amount: 1470, channel: "facebook", agent: "retention",
     status: "shipped", placed: "08 Aug", eta: "13 Aug", tracking: "BD00182881", courier: "Pathao",
     zone: "Dhaka Metro", payment: "bKash", paymentState: "paid",
@@ -499,7 +537,7 @@ export const orders: Order[] = [
     ],
   },
   {
-    id: "ORD-9312", customer: "Sadia Chowdhury", phone: "01733-880214", sku: "SKU-1410",
+    id: "ORD-9312", customer: "Sadia Chowdhury", phone: "01733-880214", sku: "P-1410",
     product: "Silk Dupatta", qty: 1, amount: 890, channel: "whatsapp", agent: "sales",
     status: "confirmed", placed: "11 Aug", eta: "16 Aug", tracking: "Awaiting pickup", courier: "Pathao",
     zone: "Dhaka Metro", payment: "Cash on delivery", paymentState: "on-delivery", conversationId: "CV-215",
@@ -510,7 +548,7 @@ export const orders: Order[] = [
     ],
   },
   {
-    id: "ORD-9311", customer: "Farhan Kabir", phone: "01844-109876", sku: "SKU-1098",
+    id: "ORD-9311", customer: "Farhan Kabir", phone: "01844-109876", sku: "P-1098",
     product: "Nandini Embroidered Kurti", qty: 2, amount: 3180, channel: "instagram", agent: "sales",
     status: "shipped", placed: "07 Aug", eta: "12 Aug", tracking: "BD00182870", courier: "RedX",
     zone: "Outside Dhaka", payment: "bKash", paymentState: "paid", conversationId: "CV-217",
@@ -522,7 +560,7 @@ export const orders: Order[] = [
     ],
   },
   {
-    id: "ORD-9310", customer: "Priya Dutta", phone: "01611-334455", sku: "SKU-1155",
+    id: "ORD-9310", customer: "Priya Dutta", phone: "01611-334455", sku: "P-1155",
     product: "Milan Anarkali Gown", qty: 1, amount: 2450, channel: "facebook", agent: "support",
     status: "returned", placed: "30 Jul", eta: "n/a", tracking: "BD00182863", courier: "Pathao",
     zone: "Dhaka Metro", payment: "Card", paymentState: "refunded", conversationId: "CV-216",
@@ -652,10 +690,10 @@ export const conversations: Conversation[] = [
         id: "m3", author: "agent", agent: "sales",
         text: "Dhakai Jamdani Saree ta ৳3,890. Regular ৳4,500 theke kome. Cream colour ta ekhono ache, 14 ta stock e. Apnar jonno ekta rekhe dibo?",
         gloss: "The Dhakai Jamdani Saree is ৳3,890, down from ৳4,500. The cream colour is still available, 14 in stock. Shall I hold one for you?",
-        time: "14:02", language: "banglish", confidence: 0.93, productRef: "SKU-1207",
+        time: "14:02", language: "banglish", confidence: 0.93, productRef: "P-1207",
         tools: [
-          { id: "t3", tool: "search_products", args: { query: "jamdani saree" }, outcome: "allowed", detail: "3 matches · SKU-1207 ranked first", latencyMs: 240 },
-          { id: "t4", tool: "check_inventory", args: { sku: "SKU-1207" }, outcome: "allowed", detail: "14 units · Shopify live", latencyMs: 310 },
+          { id: "t3", tool: "search_products", args: { query: "jamdani saree" }, outcome: "allowed", detail: "3 matches · P-1207 ranked first", latencyMs: 240 },
+          { id: "t4", tool: "check_inventory", args: { sku: "P-1207" }, outcome: "allowed", detail: "14 left", latencyMs: 310 },
         ],
       },
       {
@@ -672,7 +710,7 @@ export const conversations: Conversation[] = [
         ],
         tools: [
           { id: "t5", tool: "search_knowledge_base", args: { query: "delivery time dhaka" }, outcome: "allowed", detail: "2 chunks · top score 0.93", latencyMs: 210 },
-          { id: "t6", tool: "create_payment_link", args: { sku: "SKU-1207", qty: 1 }, outcome: "allowed", detail: "Draft order created · link issued", latencyMs: 640 },
+          { id: "t6", tool: "create_payment_link", args: { sku: "P-1207", qty: 1 }, outcome: "allowed", detail: "Draft order created · link issued", latencyMs: 640 },
         ],
       },
     ],
@@ -799,10 +837,10 @@ export const conversations: Conversation[] = [
       {
         id: "m2", author: "agent", agent: "retention",
         text: "It is. The Tangail Cotton Saree in mustard, ৳2,190. Only 3 left, so I've held one for you for the next 6 hours.",
-        time: "09:51", language: "english", confidence: 0.92, productRef: "SKU-1212",
+        time: "09:51", language: "english", confidence: 0.92, productRef: "P-1212",
         tools: [
           { id: "t1", tool: "recover_cart", args: { customer: "@nusrat.j" }, outcome: "allowed", detail: "1 item · window open 6h 04m", latencyMs: 260 },
-          { id: "t2", tool: "check_inventory", args: { sku: "SKU-1212" }, outcome: "allowed", detail: "3 units · low stock", latencyMs: 300 },
+          { id: "t2", tool: "check_inventory", args: { sku: "P-1212" }, outcome: "allowed", detail: "3 units · low stock", latencyMs: 300 },
           { id: "t3", tool: "apply_discount", args: { percent: 15, reason: "cart recovery" }, outcome: "blocked", detail: "15% exceeds the 10% ceiling · not sent", latencyMs: 8, policy: "P-01" },
         ],
       },
@@ -836,10 +874,10 @@ export const conversations: Conversation[] = [
         id: "m2", author: "agent", agent: "sales",
         text: "Nandini Embroidered Kurti ৳1,590. M size ache, 8 ta baki. Checkout link pathacchi.",
         gloss: "The Nandini Embroidered Kurti is ৳1,590. M is available, 8 left. Sending the checkout link.",
-        time: "09:12", language: "banglish", confidence: 0.95, productRef: "SKU-1098",
+        time: "09:12", language: "banglish", confidence: 0.95, productRef: "P-1098",
         tools: [
-          { id: "t1", tool: "check_inventory", args: { sku: "SKU-1098" }, outcome: "allowed", detail: "8 units · low stock", latencyMs: 290 },
-          { id: "t2", tool: "create_payment_link", args: { sku: "SKU-1098", qty: 2 }, outcome: "allowed", detail: "Draft order created · ORD-9311", latencyMs: 610 },
+          { id: "t1", tool: "check_inventory", args: { sku: "P-1098" }, outcome: "allowed", detail: "8 units · low stock", latencyMs: 290 },
+          { id: "t2", tool: "create_payment_link", args: { sku: "P-1098", qty: 2 }, outcome: "allowed", detail: "Draft order created · ORD-9311", latencyMs: 610 },
         ],
       },
     ],
@@ -1414,7 +1452,7 @@ export interface ToolDef {
 
 export const toolCatalog: ToolDef[] = [
   { name: "search_products", label: "Look up a product", description: "Search the catalogue by name, category or price.", scopes: ["sales", "retention"], mutating: false, callsToday: 1284 },
-  { name: "check_inventory", label: "Check stock", description: "Read live stock for an item from the connected store.", scopes: ["sales", "retention", "operations"], mutating: false, callsToday: 942 },
+  { name: "check_inventory", label: "Check stock", description: "Read what is actually left of an item right now.", scopes: ["sales", "retention", "operations"], mutating: false, callsToday: 942 },
   { name: "get_order_status", label: "Check an order", description: "Look up an order by number or phone, with where it is.", scopes: ["support", "operations"], mutating: false, callsToday: 806 },
   { name: "search_knowledge_base", label: "Look something up", description: "Search your policies, FAQs and product notes.", scopes: ["sales", "support", "retention"], mutating: false, callsToday: 1477 },
   { name: "check_return_eligibility", label: "Check if it can be returned", description: "Test an order against the return window and condition.", scopes: ["support"], mutating: false, callsToday: 143 },
@@ -1424,8 +1462,8 @@ export const toolCatalog: ToolDef[] = [
   { name: "send_restock_alert", label: "Send a restock alert", description: "Tell people waiting on an item that it is back.", scopes: ["retention"], mutating: true, gatedBy: "P-1", callsToday: 31 },
   { name: "issue_refund", label: "Refund an order", description: "Send money back, in full or in part.", scopes: ["manager"], mutating: true, gatedBy: "G-2", callsToday: 24 },
   { name: "approve_exception", label: "Approve an exception", description: "Allow a one-off departure from your own rules.", scopes: ["manager"], mutating: true, gatedBy: "G-2", callsToday: 9 },
-  { name: "sync_inventory", label: "Sync stock", description: "Reconcile stock between Shopify and WooCommerce.", scopes: ["operations"], mutating: true, callsToday: 48 },
-  { name: "update_crm_contact", label: "Update a contact", description: "Write what was learned back to your contact list.", scopes: ["operations"], mutating: true, callsToday: 176 },
+  { name: "sync_inventory", label: "Update stock", description: "Count an item down when it sells, and back up when it returns.", scopes: ["operations"], mutating: true, callsToday: 48 },
+  { name: "update_crm_contact", label: "Save a customer", description: "Remember a customer's name, phone and address for next time.", scopes: ["operations"], mutating: true, callsToday: 176 },
   { name: "handoff_to_human", label: "Hand over to a person", description: "Pass the conversation to a teammate with the full history.", scopes: ["manager", "support"], mutating: true, callsToday: 38 },
 ];
 
@@ -1462,7 +1500,7 @@ export const gatewayLog: GatewayEvent[] = [
   { id: "g3", time: "10:40:58", tool: "apply_discount", agent: "sales", outcome: "blocked", detail: "12% requested · ceiling is 10% · routed to Manager", latencyMs: 8, policy: "P-01", conversationId: "CV-219" },
   { id: "g4", time: "10:40:41", tool: "create_payment_link", agent: "sales", outcome: "allowed", detail: "Draft order · ৳3,890 · link issued", latencyMs: 640, conversationId: "CV-221" },
   { id: "g5", time: "10:40:30", tool: "issue_refund", agent: "manager", outcome: "approved", detail: "ORD-9310 · ৳2,450 · approved by Ayesha Karim", latencyMs: 940, policy: "P-02", conversationId: "CV-216" },
-  { id: "g6", time: "10:40:12", tool: "sync_inventory", agent: "operations", outcome: "allowed", detail: "SKU-1410 → restocking · 40 units inbound", latencyMs: 1120 },
+  { id: "g6", time: "10:40:12", tool: "sync_inventory", agent: "operations", outcome: "allowed", detail: "P-1410 → restocking · 40 units inbound", latencyMs: 1120 },
   { id: "g7", time: "10:39:58", tool: "get_order_status", agent: "support", outcome: "fallback", detail: "Courier API 3.2s · static reply sent, thread flagged", latencyMs: 3210, policy: "P-06" },
   { id: "g8", time: "10:39:31", tool: "recover_cart", agent: "retention", outcome: "blocked", detail: "24h window closed 11m ago · send suppressed", latencyMs: 6, policy: "P-05" },
   { id: "g9", time: "10:39:02", tool: "search_knowledge_base", agent: "support", outcome: "allowed", detail: "return policy COD → 3 chunks · top 0.97", latencyMs: 210 },
@@ -1551,16 +1589,13 @@ export type IntegrationBrand =
   | "messenger"
   | "whatsapp"
   | "web"
-  | "shopify"
-  | "woocommerce"
-  | "logistics"
-  | "crm";
+  | "logistics";
 
 export interface Integration {
   id: string;
   name: string;
   brand: IntegrationBrand;
-  kind: "channel" | "commerce" | "logistics" | "crm";
+  kind: "channel" | "logistics";
   status: "connected" | "available" | "attention";
   account: string;
   description: string;
@@ -1573,12 +1608,10 @@ export const integrations: Integration[] = [
   { id: "ig", name: "Instagram", brand: "instagram", kind: "channel", status: "connected", account: "@athelier", description: "Comments, DMs, story replies and compliant private replies.", scopes: ["instagram_manage_messages", "instagram_manage_comments", "pages_messaging"], lastEvent: "comment · 12s ago" },
   { id: "fb", name: "Facebook Messenger", brand: "messenger", kind: "channel", status: "connected", account: "Athelier", description: "Page conversations and comment triggers on Page posts.", scopes: ["pages_messaging", "pages_read_engagement"], lastEvent: "message · 4m ago" },
   { id: "wa", name: "WhatsApp Business", brand: "whatsapp", kind: "channel", status: "connected", account: "+880 1XXX-XXXXXX", description: "Cloud API with approved utility templates for order updates.", scopes: ["whatsapp_business_messaging", "whatsapp_business_management"], lastEvent: "message · 32m ago" },
-  { id: "web", name: "Web chat", brand: "web", kind: "channel", status: "available", account: "Not installed", description: "An embeddable widget for the storefront, sharing the same agent stack.", scopes: [] },
-  { id: "shopify", name: "Shopify", brand: "shopify", kind: "commerce", status: "connected", account: "athelier.myshopify.com", description: "Catalogue, stock and orders. Webhook-driven, pinned to API 2026-07.", scopes: ["read_products", "read_orders", "write_orders", "read_inventory"], lastEvent: "inventory_levels/update · 1m ago" },
-  { id: "woo", name: "WooCommerce", brand: "woocommerce", kind: "commerce", status: "available", account: "Not connected", description: "REST v3 adapter, ready for a second storefront.", scopes: [] },
-  { id: "pathao", name: "Pathao", brand: "logistics", kind: "logistics", status: "connected", account: "4 zones", description: "Pickup booking and live tracking for Dhaka Metro.", scopes: ["orders.read", "orders.write"], lastEvent: "status · 6m ago" },
-  { id: "steadfast", name: "Steadfast", brand: "logistics", kind: "logistics", status: "attention", account: "Outside Dhaka", description: "Nationwide courier for orders outside Dhaka.", scopes: ["orders.read"], note: "Responded in 3.2s on the last call, over the 3s fallback threshold." },
-  { id: "hubspot", name: "HubSpot", brand: "crm", kind: "crm", status: "connected", account: "2,841 contacts", description: "Contact enrichment and conversation sync.", scopes: ["crm.objects.contacts.read", "crm.objects.contacts.write"], lastEvent: "contact upsert · 9m ago" },
+  { id: "web", name: "Web chat", brand: "web", kind: "channel", status: "available", account: "Not installed", description: "A chat box for a website, if you ever get one. Same agents behind it.", scopes: [] },
+  { id: "pathao", name: "Pathao", brand: "logistics", kind: "logistics", status: "connected", account: "Dhaka Metro", description: "Books the pickup and tracks the parcel for Dhaka deliveries.", scopes: ["orders.read", "orders.write"], lastEvent: "status · 6m ago" },
+  { id: "steadfast", name: "Steadfast", brand: "logistics", kind: "logistics", status: "attention", account: "Outside Dhaka", description: "Nationwide, for anything going outside Dhaka.", scopes: ["orders.read"], note: "Took 3.2 seconds to answer on the last check, over the 3 second limit. A slow courier gets a careful reply rather than a wrong one." },
+  { id: "redx", name: "RedX", brand: "logistics", kind: "logistics", status: "available", account: "Not connected", description: "Reaches more upazilas than the others, if you sell outside the cities.", scopes: [] },
 ];
 
 export const formatBDT = (n: number) => `৳${n.toLocaleString("en-IN")}`;

@@ -35,7 +35,7 @@ type ScriptedEvent = {
  */
 const SCRIPT: ScriptedEvent[] = [
   { tool: "classify_intent", agent: "router", outcome: "allowed", detail: "price-inquiry · 0.94 · banglish", latencyMs: 170 },
-  { tool: "check_inventory", agent: "sales", outcome: "allowed", detail: "SKU-1042 → 42 units · Shopify live", latencyMs: 290 },
+  { tool: "check_inventory", agent: "sales", outcome: "allowed", detail: "Chaya Cotton Kurti · 42 left", latencyMs: 290 },
   { tool: "apply_discount", agent: "sales", outcome: "blocked", detail: "15% requested · ceiling is 10% · routed to Manager", latencyMs: 7, policy: "P-01" },
   { tool: "search_knowledge_base", agent: "support", outcome: "allowed", detail: "COD return window → 3 chunks · top 0.97", latencyMs: 215 },
   { tool: "create_payment_link", agent: "sales", outcome: "allowed", detail: "Draft order · ৳1,290 · link issued", latencyMs: 620, revenue: 1290, order: true },
@@ -49,7 +49,7 @@ const SCRIPT: ScriptedEvent[] = [
   { tool: "handoff_to_human", agent: "manager", outcome: "allowed", detail: "CV-218 → Ayesha Karim · context attached", latencyMs: 195, conversationId: "CV-218" },
   { tool: "score_sentiment", agent: "router", outcome: "allowed", detail: "negative · 0.81 · escalation armed", latencyMs: 130 },
   { tool: "issue_refund", agent: "support", outcome: "blocked", detail: "Support is not scoped for issue_refund · routed to Manager", latencyMs: 9, policy: "P-02" },
-  { tool: "sync_inventory", agent: "operations", outcome: "allowed", detail: "SKU-1410 → 40 units received", latencyMs: 1080 },
+  { tool: "sync_inventory", agent: "operations", outcome: "allowed", detail: "P-1410 → 40 units received", latencyMs: 1080 },
 ];
 
 /** Advances a HH:MM:SS clock string by a number of seconds. */

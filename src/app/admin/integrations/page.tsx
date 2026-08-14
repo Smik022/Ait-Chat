@@ -20,22 +20,12 @@ const GROUPS: { kind: Integration["kind"]; title: string; description: string }[
   {
     kind: "channel",
     title: "Channels",
-    description: "Where customers actually talk to this business.",
-  },
-  {
-    kind: "commerce",
-    title: "Storefront",
-    description: "The source of truth for catalogue, stock and orders.",
+    description: "Where customers actually talk to you.",
   },
   {
     kind: "logistics",
     title: "Couriers",
-    description: "Live tracking, read at the moment a customer asks.",
-  },
-  {
-    kind: "crm",
-    title: "CRM",
-    description: "Where conversation context is written back.",
+    description: "Checked at the moment a customer asks where their parcel is.",
   },
 ];
 
@@ -142,14 +132,14 @@ export default function IntegrationsPage() {
     <div className="space-y-5">
       <PageHeader
         title="Integrations"
-        description="Every channel and system the agents can reach, and exactly which permissions each one was granted."
+        description="Your pages and your couriers. There is no store to connect, because your catalogue lives here."
       />
 
       <MetricRow>
         <Metric label="Connected" value={connected} basis={`of ${integrations.length} available`} />
         <Metric label="Channels live" value={3} basis="Instagram, Messenger, WhatsApp" />
-        <Metric label="Needs attention" value={attention} basis="courier over latency budget" />
-        <Metric label="Webhook events today" value="12,486" basis="ingested and deduplicated" />
+        <Metric label="Needs attention" value={attention} basis="a courier answering slowly" />
+        <Metric label="Store software needed" value="0" basis="your catalogue lives here" />
       </MetricRow>
 
       <div className="grid gap-5 lg:grid-cols-2">
@@ -177,8 +167,8 @@ export default function IntegrationsPage() {
         <ol className="divide-y">
           {[
             {
-              step: "Webhook in",
-              body: "Meta, Shopify and the couriers all push events. Each one is verified, deduplicated on its own event ID, and normalised into a single internal shape.",
+              step: "It arrives",
+              body: "Meta and the couriers push events to us. Each one is verified and checked against what we have already seen, so a message never gets answered twice.",
             },
             {
               step: "Normalise",
