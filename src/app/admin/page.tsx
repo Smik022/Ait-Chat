@@ -72,7 +72,7 @@ function LiveActivity() {
           </Link>
         }
       />
-      <div className="max-h-[26rem] overflow-y-auto">
+      <div className="max-h-[26rem] overflow-auto">
         <table className="w-full text-left text-[13px]">
           <thead className="sticky top-0 z-10 bg-card">
             <tr className="border-b text-[11px] text-muted-foreground">
@@ -440,7 +440,9 @@ export default function OverviewPage() {
       </MetricRow>
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
-        <div className="space-y-5">
+        {/* min-w-0 or the table's min-content width blows the grid track out and
+            scrolls the whole document sideways. */}
+        <div className="min-w-0 space-y-5">
           <LiveActivity />
           <Funnel />
         </div>

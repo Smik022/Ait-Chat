@@ -509,6 +509,9 @@ function InboxInner() {
   );
   const [showGloss, setShowGloss] = React.useState(true);
   const [tookOver, setTookOver] = React.useState<string[]>([]);
+  const [draft, setDraft] = React.useState("");
+  /** Replies typed during this session, kept per thread. */
+  const [sent, setSent] = React.useState<Record<string, Message[]>>({});
 
   // Follow a ?thread= change during client navigation without an effect round-trip.
   const [seenParam, setSeenParam] = React.useState(requested);
@@ -565,26 +568,64 @@ function InboxInner() {
         </div>
 
         <ul className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4">
-          {conversation.messages.map((m) => (
+          {[...conversation.messages, ...(sent[selected] ?? [])].map((m) => (
             <MessageBubble key={m.id} message={m} showGloss={showGloss} />
           ))}
         </ul>
 
         <div className="shrink-0 border-t p-3">
           {isHuman ? (
-            <div className="flex items-center gap-2">
-              <div className="flex flex-1 items-center gap-2 rounded-md border px-2.5 py-2 text-[13px] text-muted-foreground">
-                <UserRound className="size-3.5 shrink-0" />
-                You have the thread. The agents will not send anything here.
-              </div>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const text = draft.trim();
+                if (!text) return;
+                const now = new Date();
+                setSent((prev) => ({
+                  ...prev,
+                  [selected]: [
+                    ...(prev[selected] ?? []),
+                    {
+                      id: `you-${(prev[selected]?.length ?? 0) + 1}`,
+                      author: "human",
+                      humanName: humanTeam[0].name,
+                      text,
+                      time: `${String(now.getHours()).padStart(2, "0")}:${String(
+                        now.getMinutes()
+                      ).padStart(2, "0")}`,
+                    },
+                  ],
+                }));
+                setDraft("");
+              }}
+              className="flex items-end gap-2"
+            >
+              <label htmlFor="reply" className="sr-only">
+                Write a reply to {conversation.customer}
+              </label>
+              <textarea
+                id="reply"
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    e.currentTarget.form?.requestSubmit();
+                  }
+                }}
+                rows={1}
+                placeholder={`Reply to ${conversation.customer.split(" ")[0]}…`}
+                className="max-h-28 min-h-9 flex-1 resize-none rounded-md border bg-background px-2.5 py-2 text-[13px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              />
               <button
-                type="button"
-                className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90"
+                type="submit"
+                disabled={!draft.trim()}
+                className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
               >
                 <Send className="size-3.5" />
                 Send
               </button>
-            </div>
+            </form>
           ) : (
             <div className="flex flex-wrap items-center gap-2">
               <div className="flex min-w-0 flex-1 items-center gap-2 rounded-md border bg-muted/40 px-2.5 py-2">

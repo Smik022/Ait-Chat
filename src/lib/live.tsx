@@ -48,7 +48,7 @@ const SCRIPT: ScriptedEvent[] = [
   { tool: "create_payment_link", agent: "sales", outcome: "allowed", detail: "Draft order · ৳2,190 · link issued", latencyMs: 590, revenue: 2190, order: true },
   { tool: "handoff_to_human", agent: "manager", outcome: "allowed", detail: "CV-218 → Ayesha Karim · context attached", latencyMs: 195, conversationId: "CV-218" },
   { tool: "score_sentiment", agent: "router", outcome: "allowed", detail: "negative · 0.81 · escalation armed", latencyMs: 130 },
-  { tool: "issue_refund", agent: "support", outcome: "blocked", detail: "Support is not scoped for issue_refund · routed to Manager", latencyMs: 9, policy: "P-02" },
+  { tool: "issue_refund", agent: "support", outcome: "blocked", detail: "Support cannot refund. Sent to the Manager.", latencyMs: 9, policy: "P-02" },
   { tool: "sync_inventory", agent: "operations", outcome: "allowed", detail: "P-1410 → 40 units received", latencyMs: 1080 },
 ];
 
@@ -131,17 +131,25 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
         conversationsToday: prev.conversationsToday + (cursor.current % 3 === 0 ? 1 : 0),
         revenueAttributed: prev.revenueAttributed + (step.revenue ?? 0),
         ordersToday: prev.ordersToday + (step.order ? 1 : 0),
+        // Held inside the published 75-90% band. It used to climb past the top of
+        // the benchmark it is measured against, which is not a claim we can make.
         containment: Math.min(
-          92,
-          Number(
-            (prev.containment + (step.outcome === "allowed" ? 0.02 : -0.03)).toFixed(2)
+          88,
+          Math.max(
+            78,
+            Number(
+              (prev.containment + (step.outcome === "allowed" ? 0.02 : -0.03)).toFixed(2)
+            )
           )
         ),
+        // Capped. Left running through a long meeting these used to drift far past
+        // the lists they claim to summarise, so the Overview would read
+        // "waiting on a person: 47" above three rows.
         approvalsWaiting:
           step.outcome === "blocked"
-            ? prev.approvalsWaiting + 1
+            ? Math.min(4, prev.approvalsWaiting + 1)
             : step.outcome === "approved"
-              ? Math.max(0, prev.approvalsWaiting - 1)
+              ? Math.max(1, prev.approvalsWaiting - 1)
               : prev.approvalsWaiting,
         toolCallsToday: prev.toolCallsToday + 1,
         blockedToday: prev.blockedToday + (step.outcome === "blocked" ? 1 : 0),

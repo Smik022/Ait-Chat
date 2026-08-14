@@ -691,7 +691,7 @@ export default function KnowledgePage() {
         />
         <Metric label="Documents added" value={knowledgeDocs.length} basis={`${ready} ready`} />
         <Metric label="Typical lookup" value="387ms" basis="question to answer" />
-        <Metric label="Invented answers" value="0" basis="no source, no claim" />
+        <Metric label="Answers with a source" value="all of them" basis="no source, no claim" />
       </MetricRow>
 
       <Tabs defaultValue="setup">

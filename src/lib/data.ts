@@ -84,7 +84,7 @@ export const languageMeta: Record<Language, { label: string; short: string }> = 
 /* --------------------------------- Agents -------------------------------- */
 
 export const toneOptions = [
-  { id: "warm", label: "Warm and personal", hint: "Uses the customer's first name, allows emoji." },
+  { id: "warm", label: "Warm and personal", hint: "Calls people apu or bhai, allows emoji." },
   { id: "professional", label: "Professional", hint: "Courteous and plain. No emoji." },
   { id: "brief", label: "Brief", hint: "Shortest correct answer. Good for order status." },
   { id: "firm", label: "Firm but kind", hint: "For refusals and policy limits." },
@@ -156,7 +156,7 @@ If your confidence in the intent is below 0.60, route to a person instead of gue
     languagePolicy: "mirror",
     systemPrompt: `You sell for Athelier. The person you are talking to found us through a comment or a DM, not a shop.
 
-Quote only stock and prices that came back from a tool call. Never state availability from memory. A wrong "yes, we have it" costs the order and the trust.
+Quote only stock and prices that came back from a real check. Never state availability from memory. A wrong "yes, we have it" costs the order and the trust.
 
 Answer the question they asked, then offer one next step. One question at a time; this is a conversation, not a form.
 
@@ -256,7 +256,7 @@ export const agentById = (id: AgentRole) => agents.find((a) => a.id === id)!;
 export const humanTeam = [
   { id: "h1", name: "Ayesha Karim", role: "Customer lead", initials: "AK", online: true },
   { id: "h2", name: "Tanvir Hossain", role: "Operations", initials: "TH", online: true },
-  { id: "h3", name: "Rumana Akter", role: "Store manager", initials: "RA", online: false },
+  { id: "h3", name: "Rumana Akter", role: "Helps at weekends", initials: "RA", online: false },
 ];
 
 /* -------------------------------- Products ------------------------------- */
@@ -334,13 +334,24 @@ export type OrderStatus =
   | "return-requested"
   | "returned";
 
-export type PaymentMethod = "bKash" | "Nagad" | "Card" | "Cash on delivery";
+export type PaymentMethod = "bKash" | "Nagad" | "Cash on delivery";
+/**
+ * Cash on delivery is most of the volume here, and the courier holds the cash
+ * for days before remitting it. Calling a delivered COD order "paid" tells her
+ * she has money she cannot spend yet, which is the wrong answer to the question
+ * she actually asks: kobe taka pabo.
+ */
 export type PaymentState =
-  | "paid"
+  /** In her hand. Prepaid and confirmed, or a courier payout that has landed. */
+  | "settled"
+  /** The courier collected the cash and still owes it to her. */
+  | "collected"
+  /** Not paid yet. */
   | "pending"
+  /** Cash on delivery, not yet delivered. */
   | "on-delivery"
   | "refunded"
-  /** Cash on delivery refused at the door, so the money was never collected. */
+  /** Refused at the door, so nothing was ever collected. */
   | "uncollected";
 
 export interface OrderEvent {
@@ -354,6 +365,11 @@ export interface Order {
   id: string;
   customer: string;
   phone: string;
+  /** Written the way the customer sent it, because that is what the rider reads. */
+  address: string;
+  area: string;
+  /** True once she has rung to confirm. Unconfirmed COD is how parcels come back. */
+  confirmedByCall: boolean;
   sku: string;
   product: string;
   qty: number;
@@ -374,35 +390,35 @@ export interface Order {
 
 export const orders: Order[] = [
   {
-    id: "ORD-9317", customer: "Rafiul Islam", phone: "01711-224500", sku: "P-1042",
-    product: "Chaya Cotton Kurti", qty: 2, amount: 2580, channel: "instagram", agent: "sales",
+    id: "ORD-9317", address: "House 42, Road 8, Block C, Bashundhara R/A, Dhaka-1229", area: "Bashundhara", confirmedByCall: true, customer: "Rafiul Islam", phone: "01711-224500", sku: "P-1042",
+    product: "Chaya Cotton Kurti", qty: 2, amount: 2580, channel: "whatsapp", agent: "sales",
     status: "shipped", placed: "09 Aug", eta: "14 Aug", tracking: "BD00182917", courier: "Pathao",
-    zone: "Dhaka Metro", payment: "bKash", paymentState: "paid", conversationId: "CV-220",
+    zone: "Dhaka Metro", payment: "bKash", paymentState: "settled", conversationId: "CV-220",
     timeline: [
       { label: "Order placed from DM", at: "09 Aug · 14:22", done: true, by: "agent" },
-      { label: "Payment captured · bKash", at: "09 Aug · 14:26", done: true, by: "system" },
+      { label: "bKash received, screenshot checked", at: "09 Aug · 14:26", done: true, by: "system" },
       { label: "Picked and packed", at: "10 Aug · 09:10", done: true, by: "human" },
       { label: "Handed to Pathao", at: "10 Aug · 16:40", done: true, by: "courier" },
       { label: "Out for delivery", at: "Expected 14 Aug", done: false, by: "courier" },
     ],
   },
   {
-    id: "ORD-9316", customer: "Tasnim Rahman", phone: "01818-993210", sku: "P-1207",
-    product: "Dhakai Jamdani Saree", qty: 1, amount: 3890, channel: "facebook", agent: "sales",
+    id: "ORD-9316", address: "Flat 5B, House 11, Road 4, Dhanmondi, Dhaka-1209", area: "Dhanmondi", confirmedByCall: true, customer: "Tasnim Rahman", phone: "01818-993210", sku: "P-1207",
+    product: "Dhakai Jamdani Saree", qty: 1, amount: 3890, channel: "instagram", agent: "sales",
     status: "processing", placed: "10 Aug", eta: "15 Aug", tracking: "BD00182909", courier: "Pathao",
-    zone: "Dhaka Metro", payment: "Nagad", paymentState: "paid", conversationId: "CV-221",
+    zone: "Dhaka Metro", payment: "Nagad", paymentState: "settled", conversationId: "CV-221",
     timeline: [
       { label: "Order placed from DM", at: "10 Aug · 11:05", done: true, by: "agent" },
-      { label: "Payment captured · Nagad", at: "10 Aug · 11:09", done: true, by: "system" },
+      { label: "Nagad received, screenshot checked", at: "10 Aug · 11:09", done: true, by: "system" },
       { label: "Picked and packed", at: "Expected 12 Aug", done: false, by: "human" },
       { label: "Handed to courier", at: "Expected 12 Aug", done: false, by: "courier" },
     ],
   },
   {
-    id: "ORD-9315", customer: "Nusrat Jahan", phone: "01677-120984", sku: "P-1212",
+    id: "ORD-9315", address: "Ward 5, Boalia, Rajshahi-6000", area: "Rajshahi", confirmedByCall: true, customer: "Nusrat Jahan", phone: "01677-120984", sku: "P-1212",
     product: "Tangail Cotton Saree", qty: 1, amount: 2190, channel: "whatsapp", agent: "support",
     status: "delivered", placed: "05 Aug", eta: "11 Aug", tracking: "BD00182902", courier: "Steadfast",
-    zone: "Outside Dhaka", payment: "Cash on delivery", paymentState: "paid",
+    zone: "Outside Dhaka", payment: "Cash on delivery", paymentState: "collected",
     timeline: [
       { label: "Order placed from DM", at: "05 Aug · 19:40", done: true, by: "agent" },
       { label: "Confirmation call · answered", at: "05 Aug · 20:15", done: true, by: "human" },
@@ -412,7 +428,7 @@ export const orders: Order[] = [
     ],
   },
   {
-    id: "ORD-9308", customer: "Md. Sabbir Ahmed", phone: "01512-345673", sku: "P-1330",
+    id: "ORD-9308", address: "Village: Baraigram, Post: Banpara, Natore", area: "Natore", confirmedByCall: false, customer: "Md. Sabbir Ahmed", phone: "01512-345673", sku: "P-1330",
     product: "Leather Block-Heel Sandal", qty: 1, amount: 1980, channel: "facebook", agent: "retention",
     status: "returned", placed: "02 Aug", eta: "n/a", tracking: "BD00182849", courier: "RedX",
     zone: "Outside Dhaka", payment: "Cash on delivery", paymentState: "uncollected",
@@ -425,33 +441,33 @@ export const orders: Order[] = [
     ],
   },
   {
-    id: "ORD-9314", customer: "Shakil Ahmed", phone: "01922-845671", sku: "P-1330",
-    product: "Leather Block-Heel Sandal", qty: 1, amount: 1980, channel: "instagram", agent: "manager",
+    id: "ORD-9314", address: "House 9, Sector 4, Uttara, Dhaka-1230", area: "Uttara", confirmedByCall: true, customer: "Shakil Ahmed", phone: "01922-845671", sku: "P-1330",
+    product: "Leather Block-Heel Sandal", qty: 1, amount: 1980, channel: "whatsapp", agent: "manager",
     status: "return-requested", placed: "06 Aug", eta: "n/a", tracking: "BD00182894", courier: "Pathao",
-    zone: "Dhaka Metro", payment: "Card", paymentState: "paid", conversationId: "CV-218",
+    zone: "Dhaka Metro", payment: "bKash", paymentState: "settled", conversationId: "CV-218",
     timeline: [
       { label: "Order placed from DM", at: "06 Aug · 12:30", done: true, by: "agent" },
-      { label: "Payment captured · Card", at: "06 Aug · 12:31", done: true, by: "system" },
+      { label: "bKash received, screenshot checked", at: "06 Aug · 12:31", done: true, by: "human" },
       { label: "Delivered", at: "09 Aug · 15:44", done: true, by: "courier" },
       { label: "Return requested · size", at: "11 Aug · 20:12", done: true, by: "agent" },
       { label: "Refund awaiting approval", at: "Now", done: false, by: "human" },
     ],
   },
   {
-    id: "ORD-9313", customer: "Mehedi Hasan", phone: "01521-447803", sku: "P-1388",
+    id: "ORD-9313", address: "Holding 108, Ward 12, Kotwali, Chattogram-4000", area: "Chattogram", confirmedByCall: true, customer: "Mehedi Hasan", phone: "01521-447803", sku: "P-1388",
     product: "Terracotta Earrings", qty: 3, amount: 1470, channel: "facebook", agent: "retention",
     status: "shipped", placed: "08 Aug", eta: "13 Aug", tracking: "BD00182881", courier: "Pathao",
-    zone: "Dhaka Metro", payment: "bKash", paymentState: "paid",
+    zone: "Dhaka Metro", payment: "bKash", paymentState: "settled",
     timeline: [
       { label: "Cart recovered by Retention", at: "08 Aug · 09:02", done: true, by: "agent" },
-      { label: "Payment captured · bKash", at: "08 Aug · 09:18", done: true, by: "system" },
+      { label: "bKash received, screenshot checked", at: "08 Aug · 09:18", done: true, by: "system" },
       { label: "Handed to Pathao", at: "09 Aug · 15:00", done: true, by: "courier" },
       { label: "Out for delivery", at: "Expected 13 Aug", done: false, by: "courier" },
     ],
   },
   {
-    id: "ORD-9312", customer: "Sadia Chowdhury", phone: "01733-880214", sku: "P-1410",
-    product: "Silk Dupatta", qty: 1, amount: 890, channel: "whatsapp", agent: "sales",
+    id: "ORD-9312", address: "Mirpur 10 golchottor er pashe, hasan store er upore, Dhaka-1216", area: "Mirpur", confirmedByCall: false, customer: "Sadia Chowdhury", phone: "01733-880214", sku: "P-1410",
+    product: "Silk Dupatta", qty: 1, amount: 890, channel: "instagram", agent: "sales",
     status: "confirmed", placed: "11 Aug", eta: "16 Aug", tracking: "Awaiting pickup", courier: "Pathao",
     zone: "Dhaka Metro", payment: "Cash on delivery", paymentState: "on-delivery", conversationId: "CV-215",
     timeline: [
@@ -461,22 +477,22 @@ export const orders: Order[] = [
     ],
   },
   {
-    id: "ORD-9311", customer: "Farhan Kabir", phone: "01844-109876", sku: "P-1098",
-    product: "Nandini Embroidered Kurti", qty: 2, amount: 3180, channel: "instagram", agent: "sales",
+    id: "ORD-9311", address: "Zindabazar, Sylhet-3100", area: "Sylhet", confirmedByCall: true, customer: "Farhan Kabir", phone: "01844-109876", sku: "P-1098",
+    product: "Nandini Embroidered Kurti", qty: 2, amount: 3180, channel: "facebook", agent: "sales",
     status: "shipped", placed: "07 Aug", eta: "12 Aug", tracking: "BD00182870", courier: "RedX",
-    zone: "Outside Dhaka", payment: "bKash", paymentState: "paid", conversationId: "CV-217",
+    zone: "Outside Dhaka", payment: "bKash", paymentState: "settled", conversationId: "CV-217",
     timeline: [
       { label: "Order placed from DM", at: "07 Aug · 16:50", done: true, by: "agent" },
-      { label: "Payment captured · bKash", at: "07 Aug · 16:55", done: true, by: "system" },
+      { label: "bKash received, screenshot checked", at: "07 Aug · 16:55", done: true, by: "system" },
       { label: "Handed to RedX", at: "08 Aug · 14:10", done: true, by: "courier" },
       { label: "In transit to Sylhet", at: "Expected 12 Aug", done: false, by: "courier" },
     ],
   },
   {
-    id: "ORD-9310", customer: "Priya Dutta", phone: "01611-334455", sku: "P-1155",
-    product: "Milan Anarkali Gown", qty: 1, amount: 2450, channel: "facebook", agent: "support",
+    id: "ORD-9310", address: "House 22, Road 2, Banani, Dhaka-1213", area: "Banani", confirmedByCall: true, customer: "Priya Dutta", phone: "01611-334455", sku: "P-1155",
+    product: "Milan Anarkali Gown", qty: 1, amount: 2450, channel: "whatsapp", agent: "support",
     status: "returned", placed: "30 Jul", eta: "n/a", tracking: "BD00182863", courier: "Pathao",
-    zone: "Dhaka Metro", payment: "Card", paymentState: "refunded", conversationId: "CV-216",
+    zone: "Dhaka Metro", payment: "bKash", paymentState: "refunded", conversationId: "CV-216",
     timeline: [
       { label: "Order placed from DM", at: "30 Jul · 10:20", done: true, by: "agent" },
       { label: "Delivered", at: "03 Aug · 12:40", done: true, by: "courier" },
@@ -496,7 +512,8 @@ export const orderStatusMeta: Record<OrderStatus, { label: string; tone: string 
 };
 
 export const paymentStateMeta: Record<PaymentState, { label: string; tone: string }> = {
-  paid: { label: "Paid", tone: "bg-live-soft text-live-ink" },
+  settled: { label: "In your hand", tone: "bg-live-soft text-live-ink" },
+  collected: { label: "Courier has it", tone: "bg-pend-soft text-pend-ink" },
   pending: { label: "Pending", tone: "bg-pend-soft text-pend-ink" },
   "on-delivery": { label: "On delivery", tone: "bg-muted text-muted-foreground" },
   refunded: { label: "Refunded", tone: "bg-block-soft text-block-ink" },
@@ -605,7 +622,7 @@ export const conversations: Conversation[] = [
         gloss: "The Dhakai Jamdani Saree is ৳3,890, down from ৳4,500. The cream colour is still available, 14 in stock. Shall I hold one for you?",
         time: "14:02", language: "banglish", confidence: 0.93, productRef: "P-1207",
         tools: [
-          { id: "t3", tool: "search_products", args: { query: "jamdani saree" }, outcome: "allowed", detail: "3 matches · P-1207 ranked first", latencyMs: 240 },
+          { id: "t3", tool: "search_products", args: { query: "jamdani saree" }, outcome: "allowed", detail: "1 match · Dhakai Jamdani Saree", latencyMs: 240 },
           { id: "t4", tool: "check_inventory", args: { sku: "P-1207" }, outcome: "allowed", detail: "14 left", latencyMs: 310 },
         ],
       },
@@ -624,6 +641,77 @@ export const conversations: Conversation[] = [
         tools: [
           { id: "t5", tool: "search_knowledge_base", args: { query: "delivery time dhaka" }, outcome: "allowed", detail: "2 chunks · top score 0.93", latencyMs: 210 },
           { id: "t6", tool: "create_payment_link", args: { sku: "P-1207", qty: 1 }, outcome: "allowed", detail: "Draft order created · link issued", latencyMs: 640 },
+        ],
+      },
+    ],
+  },
+  {
+    id: "CV-220",
+    customer: "Rafiul Islam",
+    handle: "01711…4500",
+    initials: "RI",
+    channel: "whatsapp",
+    agent: "support",
+    intent: "Order tracking",
+    sentiment: "neutral",
+    language: "bangla",
+    languageConfidence: 0.97,
+    intentConfidence: 0.93,
+    time: "4m",
+    unread: 1,
+    status: "active",
+    window: { kind: "csw", label: "WhatsApp service window", remaining: "23h 55m", pct: 99 },
+    orderId: "ORD-9317",
+    origin: "Direct WhatsApp message",
+    messages: [
+      {
+        id: "m1", author: "customer", text: "আমার অর্ডারটা কোথায়?", script: "bengali",
+        gloss: "Where is my order?", time: "10:38", language: "bangla",
+      },
+      {
+        id: "m2", author: "agent", agent: "support",
+        text: "আপনার অর্ডার ORD-9317 পাঠাও তে আছে। ট্র্যাকিং BD00182917। ১৪ আগস্টের মধ্যে পৌঁছে যাবে।",
+        script: "bengali",
+        gloss: "Your order ORD-9317 is with Pathao, tracking BD00182917. It will arrive by 14 August.",
+        time: "10:38", language: "bangla", confidence: 0.94,
+        tools: [
+          { id: "t1", tool: "get_order_status", args: { phone: "01711-224500" }, outcome: "allowed", detail: "ORD-9317 · shipped · Pathao BD00182917", latencyMs: 380 },
+          { id: "t2", tool: "check_logistics", args: { tracking: "BD00182917" }, outcome: "allowed", detail: "In transit · Tejgaon hub", latencyMs: 520 },
+        ],
+      },
+      { id: "m3", author: "customer", text: "ধন্যবাদ", script: "bengali", gloss: "Thank you", time: "10:41", language: "bangla" },
+    ],
+  },
+  {
+    id: "CV-219",
+    customer: "Nusrat Jahan",
+    handle: "@nusrat.j",
+    initials: "NJ",
+    channel: "instagram",
+    agent: "retention",
+    intent: "Abandoned cart",
+    sentiment: "positive",
+    language: "english",
+    languageConfidence: 0.99,
+    intentConfidence: 0.87,
+    time: "18m",
+    unread: 0,
+    status: "active",
+    window: { kind: "24h", label: "Standard 24h window", remaining: "6h 04m", pct: 25 },
+    origin: "Story reply",
+    messages: [
+      {
+        id: "m1", author: "customer", text: "I left something in my cart yesterday, is it still there?",
+        time: "09:50", language: "english",
+      },
+      {
+        id: "m2", author: "agent", agent: "retention",
+        text: "It is. The Tangail Cotton Saree in mustard, ৳2,190. Only 3 left, so I've held one for you for the next 6 hours.",
+        time: "09:51", language: "english", confidence: 0.92, productRef: "P-1212",
+        tools: [
+          { id: "t1", tool: "recover_cart", args: { customer: "@nusrat.j" }, outcome: "allowed", detail: "1 item · window open 6h 04m", latencyMs: 260 },
+          { id: "t2", tool: "check_inventory", args: { sku: "P-1212" }, outcome: "allowed", detail: "3 units · low stock", latencyMs: 300 },
+          { id: "t3", tool: "apply_discount", args: { percent: 15, reason: "cart recovery" }, outcome: "blocked", detail: "15% exceeds the 10% ceiling · not sent", latencyMs: 8, policy: "P-01" },
         ],
       },
     ],
@@ -679,83 +767,13 @@ export const conversations: Conversation[] = [
         text: "Refund of ৳1,980 proposed.",
         time: "20:13",
         tools: [
-          { id: "t4", tool: "issue_refund", args: { order_id: "ORD-9314", amount: 1980 }, outcome: "blocked", detail: "Support is not scoped for issue_refund · routed to Manager", latencyMs: 12, policy: "P-02" },
+          { id: "t4", tool: "issue_refund", args: { order_id: "ORD-9314", amount: 1980 }, outcome: "blocked", detail: "Support cannot refund. Sent to the Manager.", latencyMs: 12, policy: "P-02" },
         ],
       },
       {
         id: "m5", author: "system",
         text: "Manager review requested. Refund ৳1,980 on ORD-9314. Under the ৳3,000 ceiling, but outside what Support is allowed to do.",
         time: "20:14",
-      },
-    ],
-  },
-  {
-    id: "CV-220",
-    customer: "Rafiul Islam",
-    handle: "01711…4500",
-    initials: "RI",
-    channel: "whatsapp",
-    agent: "support",
-    intent: "Order tracking",
-    sentiment: "neutral",
-    language: "bangla",
-    languageConfidence: 0.97,
-    intentConfidence: 0.93,
-    time: "4m",
-    unread: 1,
-    status: "active",
-    window: { kind: "csw", label: "WhatsApp service window", remaining: "23h 55m", pct: 99 },
-    orderId: "ORD-9317",
-    origin: "Direct WhatsApp message",
-    messages: [
-      {
-        id: "m1", author: "customer", text: "আমার অর্ডারটা কোথায়?", script: "bengali",
-        gloss: "Where is my order?", time: "10:38", language: "bangla",
-      },
-      {
-        id: "m2", author: "agent", agent: "support",
-        text: "ORD-9317 ta Pathao te ache, tracking BD00182917. 14 August er moddhe pouchhe jabe. Dhaka Metro te achen tai 2–3 diner moddhei.",
-        gloss: "ORD-9317 is with Pathao, tracking BD00182917. It will arrive by 14 August. You're in Dhaka Metro so 2–3 days.",
-        time: "10:38", language: "banglish", confidence: 0.94,
-        tools: [
-          { id: "t1", tool: "get_order_status", args: { phone: "01711-224500" }, outcome: "allowed", detail: "ORD-9317 · shipped · Pathao BD00182917", latencyMs: 380 },
-          { id: "t2", tool: "check_logistics", args: { tracking: "BD00182917" }, outcome: "allowed", detail: "In transit · Tejgaon hub", latencyMs: 520 },
-        ],
-      },
-      { id: "m3", author: "customer", text: "ধন্যবাদ", script: "bengali", gloss: "Thank you", time: "10:41", language: "bangla" },
-    ],
-  },
-  {
-    id: "CV-219",
-    customer: "Nusrat Jahan",
-    handle: "@nusrat.j",
-    initials: "NJ",
-    channel: "instagram",
-    agent: "retention",
-    intent: "Abandoned cart",
-    sentiment: "positive",
-    language: "english",
-    languageConfidence: 0.99,
-    intentConfidence: 0.87,
-    time: "18m",
-    unread: 0,
-    status: "active",
-    window: { kind: "24h", label: "Standard 24h window", remaining: "6h 04m", pct: 25 },
-    origin: "Story reply",
-    messages: [
-      {
-        id: "m1", author: "customer", text: "I left something in my cart yesterday, is it still there?",
-        time: "09:50", language: "english",
-      },
-      {
-        id: "m2", author: "agent", agent: "retention",
-        text: "It is. The Tangail Cotton Saree in mustard, ৳2,190. Only 3 left, so I've held one for you for the next 6 hours.",
-        time: "09:51", language: "english", confidence: 0.92, productRef: "P-1212",
-        tools: [
-          { id: "t1", tool: "recover_cart", args: { customer: "@nusrat.j" }, outcome: "allowed", detail: "1 item · window open 6h 04m", latencyMs: 260 },
-          { id: "t2", tool: "check_inventory", args: { sku: "P-1212" }, outcome: "allowed", detail: "3 units · low stock", latencyMs: 300 },
-          { id: "t3", tool: "apply_discount", args: { percent: 15, reason: "cart recovery" }, outcome: "blocked", detail: "15% exceeds the 10% ceiling · not sent", latencyMs: 8, policy: "P-01" },
-        ],
       },
     ],
   },
@@ -825,7 +843,7 @@ export const conversations: Conversation[] = [
       },
       {
         id: "m3", author: "human", humanName: "Ayesha Karim",
-        text: "Priya, return ta approve kore diyechi. Courier kal shokale collect korbe, refund 5–7 working day e account e chole jabe.",
+        text: "Priya apu, return ta approve kore diyechi. Courier kal shokale collect korbe, refund 5–7 working day e account e chole jabe.",
         gloss: "Priya, I've approved the return. The courier will collect tomorrow morning, and the refund will reach your account in 5–7 working days.",
         time: "08:24", language: "banglish",
       },
@@ -922,7 +940,7 @@ export const postComments: PostComment[] = [
     id: "cm1", name: "Tasnim Rahman", handle: "@tasnim.r", initials: "TR", text: "PRICE", time: "2m",
     detection: { trigger: "keyword", matched: "price", intent: "price-inquiry", confidence: 1, language: "english" },
     state: "replied",
-    reply: "Hi Tasnim! The Chaya Cotton Kurti is ৳1,290 (was ৳1,650). Which colour were you looking at?",
+    reply: "Tasnim apu, the Chaya Cotton Kurti is ৳1,290 (was ৳1,650). Which colour were you looking at?",
   },
   {
     id: "cm2", name: "Farhan Kabir", handle: "@farhan.k", initials: "FK", text: "Kemon dam? 👀",
@@ -936,7 +954,7 @@ export const postComments: PostComment[] = [
     time: "14m",
     detection: { trigger: "semantic", intent: "sizing", confidence: 0.84, language: "banglish" },
     state: "replied",
-    reply: "Yes Priya, M is in stock. It fits a 30–32\" waist. Want me to hold one?",
+    reply: "Priya apu, M is in stock. It fits a 30–32\" waist. Want me to hold one?",
   },
   {
     id: "cm4", name: "Mehedi Hasan", handle: "@mehedi.h", initials: "MH", text: "Wow, so beautiful 😍", time: "22m",
@@ -949,14 +967,14 @@ export const postComments: PostComment[] = [
     gloss: "Do you deliver in Dhaka?", time: "41m",
     detection: { trigger: "keyword", matched: "delivery", intent: "delivery", confidence: 0.95, language: "banglish" },
     state: "replied",
-    reply: "Sadia, Dhaka Metro te 2–3 din, ar COD o ache. Order korte chaile link pathiye dicchi.",
+    reply: "Sadia apu, Dhaka Metro te 2–3 din, ar COD o ache. Order korte chaile link pathiye dicchi.",
   },
   {
     id: "cm6", name: "Nusrat Jahan", handle: "@nusrat.j", initials: "NJ", text: "Eta ki khati cotton?",
     gloss: "Is this pure cotton?", time: "1h",
     detection: { trigger: "semantic", intent: "material", confidence: 0.79, language: "banglish" },
     state: "replied",
-    reply: "Nusrat, ha. 100% cotton, handloom bona. Care guide o pathate pari cheile.",
+    reply: "Nusrat apu, ha. 100% cotton, handloom bona. Care guide o pathate pari cheile.",
   },
   {
     id: "cm7", name: "Shakil Ahmed", handle: "@shakil.a", initials: "SA", text: "Nice shot 👌", time: "3h",
@@ -980,7 +998,7 @@ export const incomingComments: PostComment[] = [
     gloss: "Is this kurti available in XL?", time: "now",
     detection: { trigger: "semantic", intent: "sizing", confidence: 0.88, language: "banglish" },
     state: "queued",
-    reply: "Rehana, XL ache, 6 ta baki. Rekhe dibo apnar jonno?",
+    reply: "Rehana apu, XL ache, 6 ta baki. Rekhe dibo apnar jonno?",
   },
   {
     id: "cm10", name: "Jamil Ahsan", handle: "@jamil.a", initials: "JA", text: "price koto vai", time: "now",
@@ -1330,28 +1348,6 @@ export const platformGuardrails: Guardrail[] = [
   { id: "P-2", action: "message", condition: "to someone who opted out", outcome: "block", enabled: true, locked: true, lockedReason: "Opting out is final, everywhere.", stoppedThisWeek: 3 },
 ];
 
-export interface PolicyRule {
-  id: string;
-  name: string;
-  description: string;
-  rule: string;
-  enforcement: "hard" | "soft";
-  enabled: boolean;
-  firedThisWeek: number;
-  source: string;
-}
-
-export const policyRules: PolicyRule[] = [
-  { id: "P-01", name: "Discount ceiling", description: "A specialist may apply up to 10% unaided. Anything higher goes to the Manager.", rule: "apply_discount.percent ≤ 10", enforcement: "hard", enabled: true, firedThisWeek: 34, source: "Merchant policy" },
-  { id: "P-02", name: "Refund approval", description: "Refunds above ৳3,000 need a person. Below that, the Manager agent may approve.", rule: "issue_refund.amount > 3000 → human", enforcement: "hard", enabled: true, firedThisWeek: 21, source: "Merchant policy" },
-  { id: "P-03", name: "API isolation", description: "Models propose structured tool calls only. They never hold a database connection.", rule: "deny direct_query", enforcement: "hard", enabled: true, firedThisWeek: 0, source: "Platform" },
-  { id: "P-04", name: "PII masking", description: "Phone numbers and addresses are masked in every log and trace.", rule: "mask(phone, address)", enforcement: "hard", enabled: true, firedThisWeek: 1893, source: "Platform" },
-  { id: "P-05", name: "Messaging window", description: "No automated send outside Meta's 24-hour window or WhatsApp's service window.", rule: "window.open == true", enforcement: "hard", enabled: true, firedThisWeek: 12, source: "Meta platform policy" },
-  { id: "P-06", name: "Latency fallback", description: "If an external system takes longer than 3 seconds, answer statically or pass to a person.", rule: "timeout = 3000ms", enforcement: "soft", enabled: true, firedThisWeek: 7, source: "Platform" },
-  { id: "P-07", name: "Opt-out honoured", description: "Retention stops messaging the moment someone opts out. No exceptions, no delay.", rule: "opt_out → block all sends", enforcement: "hard", enabled: true, firedThisWeek: 3, source: "Meta platform policy" },
-  { id: "P-08", name: "Prompt-injection screen", description: "Inbound public messages are screened for instructions aimed at the agent itself.", rule: "injection_score < 0.7", enforcement: "hard", enabled: true, firedThisWeek: 5, source: "Platform" },
-];
-
 export interface ToolDef {
   name: string;
   /** What a shop owner would call it. This is what the interface shows. */
@@ -1408,12 +1404,12 @@ export interface GatewayEvent {
 }
 
 export const gatewayLog: GatewayEvent[] = [
-  { id: "g1", time: "10:41:22", tool: "get_order_status", agent: "support", outcome: "allowed", detail: "ORD-9316 → processing · Pathao BD00182909", latencyMs: 380, conversationId: "CV-220" },
-  { id: "g2", time: "10:41:05", tool: "search_products", agent: "sales", outcome: "allowed", detail: "kurti · under ৳1,600 → 3 matches", latencyMs: 240, conversationId: "CV-221" },
-  { id: "g3", time: "10:40:58", tool: "apply_discount", agent: "sales", outcome: "blocked", detail: "12% requested · ceiling is 10% · routed to Manager", latencyMs: 8, policy: "P-01", conversationId: "CV-219" },
+  { id: "g1", time: "10:41:22", tool: "get_order_status", agent: "support", outcome: "allowed", detail: "ORD-9317 → shipped · Pathao BD00182917", latencyMs: 380, conversationId: "CV-220" },
+  { id: "g2", time: "10:41:05", tool: "search_products", agent: "sales", outcome: "allowed", detail: "jamdani saree → 1 match", latencyMs: 240, conversationId: "CV-221" },
+  { id: "g3", time: "10:40:58", tool: "apply_discount", agent: "sales", outcome: "blocked", detail: "15% asked for · your limit is 10% · sent to you", latencyMs: 8, policy: "P-01", conversationId: "CV-219" },
   { id: "g4", time: "10:40:41", tool: "create_payment_link", agent: "sales", outcome: "allowed", detail: "Draft order · ৳3,890 · link issued", latencyMs: 640, conversationId: "CV-221" },
   { id: "g5", time: "10:40:30", tool: "issue_refund", agent: "manager", outcome: "approved", detail: "ORD-9310 · ৳2,450 · approved by Ayesha Karim", latencyMs: 940, policy: "P-02", conversationId: "CV-216" },
-  { id: "g6", time: "10:40:12", tool: "sync_inventory", agent: "operations", outcome: "allowed", detail: "P-1410 → restocking · 40 units inbound", latencyMs: 1120 },
+  { id: "g6", time: "10:40:12", tool: "sync_inventory", agent: "operations", outcome: "allowed", detail: "Silk Dupatta → 40 back in stock", latencyMs: 1120 },
   { id: "g7", time: "10:39:58", tool: "get_order_status", agent: "support", outcome: "fallback", detail: "Courier API 3.2s · static reply sent, thread flagged", latencyMs: 3210, policy: "P-06" },
   { id: "g8", time: "10:39:31", tool: "recover_cart", agent: "retention", outcome: "blocked", detail: "24h window closed 11m ago · send suppressed", latencyMs: 6, policy: "P-05" },
   { id: "g9", time: "10:39:02", tool: "search_knowledge_base", agent: "support", outcome: "allowed", detail: "return policy COD → 3 chunks · top 0.97", latencyMs: 210 },
@@ -1432,7 +1428,7 @@ export const gatewayStages = [
   { key: "validate", label: "Valid", detail: "Known action, arguments the right shape" },
   { key: "role", label: "Allowed", detail: "This agent holds this action" },
   { key: "policy", label: "Within limits", detail: "The merchant's rules permit these values" },
-  { key: "execute", label: "Run", detail: "Call the store, check what comes back" },
+  { key: "execute", label: "Run", detail: "Do it, then check the result" },
 ];
 
 /* -------------------------------- Analytics ------------------------------ */
@@ -1470,10 +1466,9 @@ export const languageMix = [
 ];
 
 export const kpis = {
-  conversationsToday: 1284,
-  dmConversion: 12.3,
-  revenueAttributed: 40200,
-  containment: 87.4,
+  conversationsToday: 38,
+  revenueAttributed: 9400,
+  containment: 81.2,
   avgResponse: 1.1,
   approvalsWaiting: 2,
 };

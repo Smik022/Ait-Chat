@@ -99,6 +99,26 @@ function OrderDetail({ order }: { order: Order }) {
         </dl>
 
         <dl className="space-y-2 p-4 text-[12px]">
+          <div className="gap-3">
+            <dt className="text-muted-foreground">Send it to</dt>
+            <dd className="mt-1 leading-relaxed">
+              <span className="block font-medium">{order.customer}</span>
+              <span className="block font-mono text-[11px]">{order.phone}</span>
+              <span className="mt-0.5 block text-[11px] text-muted-foreground">
+                {order.address}
+              </span>
+            </dd>
+          </div>
+          <div className="flex justify-between gap-3 border-t pt-2">
+            <dt className="text-muted-foreground">Rung to confirm</dt>
+            <dd>
+              {order.confirmedByCall ? (
+                <Chip tone="bg-live-soft text-live-ink">Yes</Chip>
+              ) : (
+                <Chip tone="bg-pend-soft text-pend-ink">Not yet</Chip>
+              )}
+            </dd>
+          </div>
           <div className="flex justify-between gap-3">
             <dt className="text-muted-foreground">Payment</dt>
             <dd className="flex items-center gap-1.5">
@@ -213,17 +233,20 @@ function OrdersInner() {
   const shown = orders.filter((o) => matches(o, filter));
   const order = orders.find((o) => o.id === selected)!;
 
-  const revenue = orders
-    .filter((o) => o.paymentState === "paid")
+  // Only money she can actually spend. A delivered COD order is not this.
+  const inHand = orders
+    .filter((o) => o.paymentState === "settled")
     .reduce((n, o) => n + o.amount, 0);
-  const cod = orders.filter((o) => o.payment === "Cash on delivery").length;
+  const withCourier = orders
+    .filter((o) => o.paymentState === "collected")
+    .reduce((n, o) => n + o.amount, 0);
   const rto = orders.filter((o) => o.paymentState === "uncollected").length;
 
   return (
     <div className="space-y-5">
       <PageHeader
         title="Orders"
-        description="Every order here began as a message. Status and tracking are read from the store and the courier at the moment you look, never from a cache."
+        description="Every order here began as a message. Where a parcel is gets checked with the courier the moment you look, not remembered from earlier."
         actions={
           <button
             type="button"
@@ -237,19 +260,19 @@ function OrdersInner() {
 
       <MetricRow>
         <Metric
-          label="Captured revenue"
-          value={formatBDT(revenue)}
-          basis={`${orders.filter((o) => o.paymentState === "paid").length} paid orders`}
+          label="Money in your hand"
+          value={formatBDT(inHand)}
+          basis="paid before it shipped"
+        />
+        <Metric
+          label="Courier still owes you"
+          value={formatBDT(withCourier)}
+          basis="cash collected, not paid out yet"
         />
         <Metric
           label="In flight"
           value={orders.filter((o) => IN_FLIGHT.includes(o.status)).length}
           basis="confirmed through shipped"
-        />
-        <Metric
-          label="Cash on delivery"
-          value={`${Math.round((cod / orders.length) * 100)}%`}
-          basis={`${cod} of ${orders.length} orders`}
         />
         <Metric
           label="Refused at the door"

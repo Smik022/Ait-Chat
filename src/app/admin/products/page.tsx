@@ -34,7 +34,7 @@ const stockMeta: Record<Product["status"], { label: string; tone: string; dot: s
 
 type Phase = "empty" | "reading" | "read";
 
-function AddProduct() {
+function AddProduct({ onAdd }: { onAdd: (p: Product) => void }) {
   const [typed, setTyped] = React.useState(catalogueDraft.typed);
   const [phase, setPhase] = React.useState<Phase>("empty");
   const [stock, setStock] = React.useState("");
@@ -46,7 +46,7 @@ function AddProduct() {
   }, [phase]);
 
   return (
-    <Panel>
+    <Panel id="add-a-product" className="scroll-mt-20">
       <PanelHeader
         title="Add a product"
         description="Type it however you say it. It will pull out the details and ask about anything it is unsure of."
@@ -156,11 +156,28 @@ function AddProduct() {
             <button
               type="button"
               disabled={!stock}
-              onClick={() =>
+              onClick={() => {
+                onAdd({
+                  id: `P-${1400 + Math.floor(Number(stock) || 0)}`,
+                  name: "Nokshi Kurti",
+                  category: "Kurti",
+                  price: 1450,
+                  compareAt: null,
+                  stock: Number(stock),
+                  sizes: ["M", "L", "XL"],
+                  colours: ["Maroon", "Navy"],
+                  material: "Cotton",
+                  status: Number(stock) > 8 ? "in-stock" : "low-stock",
+                  sold: 0,
+                  addedVia: "photo",
+                  addedOn: "today",
+                });
+                setPhase("empty");
+                setStock("");
                 toast.success("Nokshi Kurti added", {
                   description: `${stock} in stock. Your agents can quote it from now on.`,
-                })
-              }
+                });
+              }}
               className="inline-flex h-9 items-center gap-1.5 rounded-md bg-primary px-4 text-[13px] font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
             >
               <Check className="size-3.5" />
@@ -181,7 +198,7 @@ function AddProduct() {
 
 /* --------------------------------- Listing -------------------------------- */
 
-function Catalogue() {
+function Catalogue({ items }: { items: Product[] }) {
   return (
     <Panel>
       <PanelHeader
@@ -201,7 +218,7 @@ function Catalogue() {
             </tr>
           </thead>
           <tbody>
-            {products.map((p) => {
+            {items.map((p) => {
               const meta = stockMeta[p.status];
               return (
                 <tr key={p.id} className="border-b last:border-0">
@@ -254,9 +271,10 @@ function Catalogue() {
 }
 
 export default function ProductsPage() {
-  const low = products.filter((p) => p.status === "low-stock").length;
-  const out = products.filter((p) => p.stock === 0).length;
-  const fromReplies = products.filter((p) => p.addedVia === "reply").length;
+  const [items, setItems] = React.useState<Product[]>(products);
+  const low = items.filter((p) => p.status === "low-stock").length;
+  const out = items.filter((p) => p.stock === 0).length;
+  const fromReplies = items.filter((p) => p.addedVia === "reply").length;
 
   return (
     <div className="space-y-5">
@@ -264,19 +282,18 @@ export default function ProductsPage() {
         title="Products"
         description="Your catalogue lives here, not in a store. Everything the agents quote about an item is something you entered or confirmed."
         actions={
-          <button
-            type="button"
-            onClick={() => toast("Scroll down to the add box")}
+          <a
+            href="#add-a-product"
             className="inline-flex h-8 items-center gap-1.5 rounded-md border px-3 text-xs font-medium transition-colors hover:bg-muted"
           >
             <Plus className="size-3.5" />
             Add a product
-          </button>
+          </a>
         }
       />
 
       <MetricRow>
-        <Metric label="Items" value={products.length} basis="everything you sell" />
+        <Metric label="Items" value={items.length} basis="everything you sell" />
         <Metric
           label="Running low"
           value={low}
@@ -292,8 +309,8 @@ export default function ProductsPage() {
       </MetricRow>
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]">
-        <Catalogue />
-        <AddProduct />
+        <Catalogue items={items} />
+        <AddProduct onAdd={(p) => setItems((prev) => [p, ...prev])} />
       </div>
     </div>
   );

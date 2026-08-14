@@ -8,6 +8,7 @@ import {
   Inbox,
   MessageSquareQuote,
   Package,
+  Tag,
   Plug,
   ShieldCheck,
   Users,
@@ -31,6 +32,7 @@ const routes = [
   { href: "/admin/agents", label: "Agents", icon: Users },
   { href: "/admin/guardrails", label: "Guardrails", icon: ShieldCheck },
   { href: "/admin/knowledge", label: "Knowledge", icon: BookOpen },
+  { href: "/admin/products", label: "Products", icon: Tag },
   { href: "/admin/orders", label: "Orders", icon: Package },
   { href: "/admin/integrations", label: "Integrations", icon: Plug },
 ];

@@ -786,7 +786,7 @@ export default function Home() {
                   Stopped, and sent to you
                 </div>
                 <p className="mt-1 text-xs leading-relaxed text-block-ink">
-                  The discount never reached the store. It is waiting for your answer, and
+                  The discount never happened. It is waiting for your answer, and
                   the attempt is on the record either way.
                 </p>
               </div>
