@@ -15,6 +15,7 @@ import {
   Plug,
   Search,
   ShieldCheck,
+  Tag,
   Users,
   PanelLeft,
 } from "lucide-react";
@@ -52,6 +53,7 @@ const navigation = [
   {
     group: "Commerce",
     items: [
+      { href: "/admin/products", label: "Products", icon: Tag },
       { href: "/admin/orders", label: "Orders", icon: Package },
       { href: "/admin/integrations", label: "Integrations", icon: Plug },
     ],
