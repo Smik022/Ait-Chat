@@ -125,56 +125,6 @@ export function CrmMark({ className }: LogoProps) {
   );
 }
 
-/* ----------------------------- Model providers --------------------------- */
-
-export function OpenAIMark({ className }: LogoProps) {
-  // OpenAI's mark is genuinely monochrome, so it inherits the surface colour.
-  return (
-    <svg viewBox="0 0 24 24" className={`${base} ${className ?? ""}`} aria-hidden="true">
-      <path
-        d="M12 2.6a4 4 0 0 1 3.46 2l3.02 5.23a4 4 0 0 1 0 4l-3.02 5.23a4 4 0 0 1-3.46 2H12a4 4 0 0 1-3.46-2l-3.02-5.23a4 4 0 0 1 0-4L8.54 4.6a4 4 0 0 1 3.46-2Z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      />
-      <path
-        d="M12 7.7 15.7 9.85v4.3L12 16.3l-3.7-2.15v-4.3L12 7.7Z"
-        fill="currentColor"
-      />
-    </svg>
-  );
-}
-
-export function AnthropicMark({ className }: LogoProps) {
-  return (
-    <svg viewBox="0 0 24 24" className={`${base} ${className ?? ""}`} aria-hidden="true">
-      <path
-        d="M8.4 4.3h3.3l5.6 15.4h-3.4l-1.15-3.3H6.6l-1.15 3.3H2.1L8.4 4.3Zm.55 4.1L7.4 13.1h3.1L8.95 8.4Z"
-        fill="#D97757"
-      />
-      <path d="M15.4 4.3h3.35L22 13.2h-3.35L15.4 4.3Z" fill="#D97757" opacity="0.6" />
-    </svg>
-  );
-}
-
-export function GeminiMark({ className }: LogoProps) {
-  return (
-    <svg viewBox="0 0 24 24" className={`${base} ${className ?? ""}`} aria-hidden="true">
-      <defs>
-        <linearGradient id="ait-gem" x1="3" y1="20" x2="21" y2="4" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#4285F4" />
-          <stop offset="0.5" stopColor="#9B72CB" />
-          <stop offset="1" stopColor="#D96570" />
-        </linearGradient>
-      </defs>
-      <path
-        d="M12 2.2c.35 4.05 1.6 6.55 3.4 8.05 1.2 1 3 1.5 6.4 1.75-3.4.25-5.2.75-6.4 1.75-1.8 1.5-3.05 4-3.4 8.05-.35-4.05-1.6-6.55-3.4-8.05-1.2-1-3-1.5-6.4-1.75 3.4-.25 5.2-.75 6.4-1.75C10.4 8.75 11.65 6.25 12 2.2Z"
-        fill="url(#ait-gem)"
-      />
-    </svg>
-  );
-}
-
 export function GoogleMark({ className }: LogoProps) {
   return (
     <svg viewBox="0 0 24 24" className={`${base} ${className ?? ""}`} aria-hidden="true">
@@ -207,9 +157,6 @@ export const brandMarks = {
   web: GlobeMark,
   logistics: TruckMark,
   crm: CrmMark,
-  openai: OpenAIMark,
-  anthropic: AnthropicMark,
-  gemini: GeminiMark,
 } as const;
 
 export type BrandKey = keyof typeof brandMarks;

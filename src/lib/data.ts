@@ -83,72 +83,6 @@ export const languageMeta: Record<Language, { label: string; short: string }> = 
 
 /* --------------------------------- Agents -------------------------------- */
 
-/* ------------------------------ Model catalogue --------------------------- */
-
-export type ProviderKey = "openai" | "anthropic" | "gemini";
-
-export interface ModelOption {
-  id: string;
-  provider: ProviderKey;
-  providerName: string;
-  name: string;
-  note: string;
-  context: string;
-  medianLatency: string;
-  relativeCost: 1 | 2 | 3;
-}
-
-/**
- * Illustrative. Model names and figures here stand in for a real provider
- * integration. Confirm each against the provider's current lineup and published
- * pricing before this is anything other than a demonstration.
- */
-export const modelCatalog: ModelOption[] = [
-  {
-    id: "claude-sonnet-5",
-    provider: "anthropic",
-    providerName: "Anthropic",
-    name: "Claude Sonnet 5",
-    note: "Strongest at following policy wording exactly. The default for anything touching money.",
-    context: "200K",
-    medianLatency: "1.2s",
-    relativeCost: 2,
-  },
-  {
-    id: "claude-haiku-4-5",
-    provider: "anthropic",
-    providerName: "Anthropic",
-    name: "Claude Haiku 4.5",
-    note: "Fast and cheap. Suited to classification and routing where the answer is a label.",
-    context: "200K",
-    medianLatency: "0.4s",
-    relativeCost: 1,
-  },
-  {
-    id: "gpt-5-1",
-    provider: "openai",
-    providerName: "OpenAI",
-    name: "GPT-5.1",
-    note: "Balanced generalist. Reliable Banglish generation in the customer's own register.",
-    context: "128K",
-    medianLatency: "1.4s",
-    relativeCost: 2,
-  },
-  {
-    id: "gemini-3-pro",
-    provider: "gemini",
-    providerName: "Google",
-    name: "Gemini 3 Pro",
-    note: "Long context and multimodal, useful when customers send photos of a product or a payment screenshot.",
-    context: "1M",
-    medianLatency: "1.6s",
-    relativeCost: 3,
-  },
-];
-
-export const modelById = (id: string) =>
-  modelCatalog.find((m) => m.id === id) ?? modelCatalog[0];
-
 export const toneOptions = [
   { id: "warm", label: "Warm and personal", hint: "Uses the customer's first name, allows emoji." },
   { id: "professional", label: "Professional", hint: "Courteous and plain. No emoji." },
@@ -176,9 +110,6 @@ export interface AgentDef {
   kpis: { resolved: number; containment: number; avgResponse: string; handoffs: number };
   initials: string;
   /* Configuration, editable in the workspace. */
-  model: string;
-  temperature: number;
-  maxTokens: number;
   tone: string;
   languagePolicy: string;
   systemPrompt: string;
@@ -197,9 +128,6 @@ export const agents: AgentDef[] = [
     handlesNow: 0,
     kpis: { resolved: 4821, containment: 100, avgResponse: "0.2s", handoffs: 214 },
     initials: "RT",
-    model: "claude-haiku-4-5",
-    temperature: 0,
-    maxTokens: 256,
     tone: "brief",
     languagePolicy: "mirror",
     systemPrompt: `You classify inbound messages. You never reply to a customer yourself.
@@ -224,9 +152,6 @@ If your confidence in the intent is below 0.60, route to a person instead of gue
     handlesNow: 12,
     kpis: { resolved: 1894, containment: 88.2, avgResponse: "1.4s", handoffs: 96 },
     initials: "SA",
-    model: "gpt-5-1",
-    temperature: 0.4,
-    maxTokens: 800,
     tone: "warm",
     languagePolicy: "mirror",
     systemPrompt: `You sell for Athelier. The person you are talking to found us through a comment or a DM, not a shop.
@@ -251,9 +176,6 @@ Write back in whatever they wrote in. If they write Banglish, write Banglish.`,
     handlesNow: 9,
     kpis: { resolved: 2231, containment: 84.6, avgResponse: "1.1s", handoffs: 143 },
     initials: "SU",
-    model: "claude-sonnet-5",
-    temperature: 0.2,
-    maxTokens: 700,
     tone: "professional",
     languagePolicy: "mirror",
     systemPrompt: `You look after orders that already exist.
@@ -276,9 +198,6 @@ You cannot issue refunds. When one is clearly warranted, say plainly that you ar
     handlesNow: 3,
     kpis: { resolved: 642, containment: 79.1, avgResponse: "2.0s", handoffs: 38 },
     initials: "RE",
-    model: "claude-haiku-4-5",
-    temperature: 0.5,
-    maxTokens: 500,
     tone: "warm",
     languagePolicy: "mirror",
     systemPrompt: `You re-engage people who left something behind.
@@ -300,9 +219,6 @@ If anyone asks to stop hearing from us, stop immediately and confirm that you ha
     handlesNow: 0,
     kpis: { resolved: 960, containment: 96.4, avgResponse: "0.9s", handoffs: 11 },
     initials: "OP",
-    model: "claude-haiku-4-5",
-    temperature: 0,
-    maxTokens: 400,
     tone: "brief",
     languagePolicy: "english",
     systemPrompt: `You keep the catalogue honest. You do not talk to customers.
@@ -323,9 +239,6 @@ Never invent a product detail. If a size, colour or material was not entered by 
     handlesNow: 2,
     kpis: { resolved: 214, containment: 61.3, avgResponse: "3.4s", handoffs: 214 },
     initials: "MG",
-    model: "claude-sonnet-5",
-    temperature: 0.1,
-    maxTokens: 600,
     tone: "firm",
     languagePolicy: "mirror",
     systemPrompt: `You decide the things a specialist is not permitted to decide alone.
