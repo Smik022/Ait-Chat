@@ -1071,6 +1071,180 @@ export const knowledgeDocs: KnowledgeDoc[] = [
   { id: "KB-07", title: "Product Terms & Fabric Glossary", type: "PDF", category: "Catalogue", pages: 22, chunks: 64, status: "failed", updated: "29 Jul", size: "5.1 MB", usedThisWeek: 0, error: "Scanned pages have no text layer, so OCR is required before indexing." },
 ];
 
+/* ------------------------- Setup, for page-only shops --------------------- */
+
+/**
+ * Most sellers here run a Facebook page and nothing else. They have no policy
+ * PDF to upload, so the knowledge base cannot be the first thing we ask them for.
+ * These are the questions their customers actually ask all day, and answering
+ * them once gives the agents almost everything they need.
+ */
+export interface BusinessBasics {
+  sells: string;
+  hasSizes: boolean;
+  dhakaCharge: number;
+  dhakaDays: string;
+  outsideCharge: number;
+  outsideDays: string;
+  couriers: string[];
+  freeOver: number;
+  cod: boolean;
+  bkash: boolean;
+  nagad: boolean;
+  advanceOutside: boolean;
+  advanceAmount: number;
+  acceptReturns: boolean;
+  returnDays: number;
+  returnPaidBy: "shop" | "customer";
+  openFrom: string;
+  openTo: string;
+  alwaysHuman: string[];
+}
+
+export const businessBasicsDefaults: BusinessBasics = {
+  sells: "Women's three-piece, saree and kurti",
+  hasSizes: true,
+  dhakaCharge: 80,
+  dhakaDays: "2 to 3 days",
+  outsideCharge: 130,
+  outsideDays: "3 to 5 days",
+  couriers: ["Pathao", "Steadfast"],
+  freeOver: 2000,
+  cod: true,
+  bkash: true,
+  nagad: true,
+  advanceOutside: true,
+  advanceAmount: 200,
+  acceptReturns: true,
+  returnDays: 7,
+  returnPaidBy: "customer",
+  openFrom: "10:00",
+  openTo: "22:00",
+  alwaysHuman: ["Refunds", "Wholesale orders", "Angry customers"],
+};
+
+export const courierOptions = ["Pathao", "Steadfast", "RedX", "Paperfly", "Sundarban"];
+
+export const alwaysHumanOptions = [
+  "Refunds",
+  "Wholesale orders",
+  "Angry customers",
+  "Custom or made-to-order",
+  "Anything over ৳10,000",
+];
+
+export interface DerivedAnswer {
+  id: string;
+  question: string;
+  answer: string;
+  /** Which step of setup produced it, for the "you answered this" link. */
+  from: string;
+}
+
+const taka = (n: number) => `৳${n.toLocaleString("en-IN")}`;
+
+/** Turns the eight answers into the replies an agent can actually send. */
+export function derivedAnswers(b: BusinessBasics): DerivedAnswer[] {
+  const out: DerivedAnswer[] = [];
+
+  out.push({
+    id: "d1",
+    question: "How much is delivery?",
+    answer: `${taka(b.dhakaCharge)} inside Dhaka and ${taka(b.outsideCharge)} outside${
+      b.freeOver > 0 ? `. Free over ${taka(b.freeOver)}` : ""
+    }.`,
+    from: "Delivery",
+  });
+
+  out.push({
+    id: "d2",
+    question: "How many days will it take?",
+    answer: `${b.dhakaDays} inside Dhaka, ${b.outsideDays} outside Dhaka.`,
+    from: "Delivery",
+  });
+
+  if (b.couriers.length) {
+    out.push({
+      id: "d3",
+      question: "Which courier do you use?",
+      answer:
+        b.couriers.length === 1
+          ? `${b.couriers[0]}.`
+          : `${b.couriers.slice(0, -1).join(", ")} and ${b.couriers[b.couriers.length - 1]}.`,
+      from: "Delivery",
+    });
+  }
+
+  out.push({
+    id: "d4",
+    question: "Do you take cash on delivery?",
+    answer: b.cod
+      ? b.advanceOutside
+        ? `Yes. Inside Dhaka it is full cash on delivery. Outside Dhaka we take ${taka(b.advanceAmount)} in advance and the rest on delivery.`
+        : "Yes, cash on delivery everywhere."
+      : "No, payment is taken in advance.",
+    from: "Payment",
+  });
+
+  const wallets = [b.bkash && "bKash", b.nagad && "Nagad"].filter(Boolean) as string[];
+  if (wallets.length) {
+    out.push({
+      id: "d5",
+      question: "Can I pay with bKash?",
+      answer: `Yes, ${wallets.join(" and ")} both work. Send a screenshot after paying and we will confirm.`,
+      from: "Payment",
+    });
+  }
+
+  out.push({
+    id: "d6",
+    question: "Can I return it if it does not fit?",
+    answer: b.acceptReturns
+      ? `Yes, within ${b.returnDays} days, unworn and with the tag on. Return delivery is paid by ${
+          b.returnPaidBy === "shop" ? "us" : "the customer"
+        }.`
+      : "We do not take returns, so please check the measurements before ordering.",
+    from: "Returns",
+  });
+
+  out.push({
+    id: "d7",
+    question: "What do you sell?",
+    answer: `${b.sells}.`,
+    from: "Your shop",
+  });
+
+  if (b.hasSizes) {
+    out.push({
+      id: "d8",
+      question: "Do you have my size?",
+      answer:
+        "Checked live against stock before answering, so the size we quote is the size we have.",
+      from: "Your shop",
+    });
+  }
+
+  out.push({
+    id: "d9",
+    question: "Are you open now?",
+    answer: `A person is around between ${b.openFrom} and ${b.openTo}. Outside those hours the agents still reply, and anything needing a decision waits for morning.`,
+    from: "People",
+  });
+
+  if (b.alwaysHuman.length) {
+    out.push({
+      id: "d10",
+      question: "I want to speak to a person",
+      answer: `Passed straight to you, along with ${b.alwaysHuman
+        .map((x) => x.toLowerCase())
+        .join(", ")}.`,
+      from: "People",
+    });
+  }
+
+  return out;
+}
+
 export interface RetrievalHit {
   id: string;
   doc: string;
