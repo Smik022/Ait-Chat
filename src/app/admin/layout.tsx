@@ -18,6 +18,8 @@ import {
   Tag,
   Users,
   PanelLeft,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -52,45 +54,80 @@ function isActive(pathname: string, href: string) {
   return pathname.startsWith(href);
 }
 
-function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
+function SidebarBody({
+  onNavigate,
+  collapsed = false,
+  onToggle,
+}: {
+  onNavigate?: () => void;
+  /** Icon rail mode. The mobile sheet never collapses. */
+  collapsed?: boolean;
+  onToggle?: () => void;
+}) {
   const pathname = usePathname();
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex h-14 shrink-0 items-center gap-2.5 border-b px-4">
+      <div
+        className={cn(
+          "flex h-14 shrink-0 items-center border-b",
+          collapsed ? "justify-center" : "gap-2.5 px-4"
+        )}
+      >
         <LogoMark className="size-7 rounded-md" />
-        <div className="min-w-0 leading-tight">
-          <div className="truncate text-sm font-semibold tracking-tight">Ait-Chat</div>
-          <div className="truncate text-[11px] text-muted-foreground">
-            Social Commerce OS
+        {!collapsed ? (
+          <div className="min-w-0 flex-1 leading-tight">
+            <div className="truncate text-sm font-semibold tracking-tight">Ait-Chat</div>
+            <div className="truncate text-[11px] text-muted-foreground">
+              Social Commerce OS
+            </div>
           </div>
-        </div>
+        ) : null}
+        {!collapsed && onToggle ? (
+          <button
+            type="button"
+            onClick={onToggle}
+            aria-label="Tuck the sidebar away"
+            title="Tuck the sidebar away"
+            className="shrink-0 rounded p-1 text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
+          >
+            <PanelLeftClose className="size-4" />
+          </button>
+        ) : null}
       </div>
 
       <div className="border-b p-2">
         <button
           type="button"
-          className="flex w-full items-center gap-2.5 rounded-md p-2 text-left transition-colors hover:bg-sidebar-accent"
+          title={collapsed ? merchant.name : undefined}
+          className={cn(
+            "flex w-full items-center rounded-md p-2 transition-colors hover:bg-sidebar-accent",
+            collapsed ? "justify-center" : "gap-2.5 text-left"
+          )}
         >
           <span className="flex size-7 shrink-0 items-center justify-center rounded bg-foreground text-[11px] font-semibold text-background">
             AT
           </span>
-          <span className="min-w-0 flex-1 leading-tight">
-            <span className="block truncate text-[13px] font-medium">
-              {merchant.name}
-            </span>
-            <span className="block truncate text-[11px] text-muted-foreground">
-              {merchant.category}
-            </span>
-          </span>
-          <ChevronsUpDown className="size-3.5 shrink-0 text-muted-foreground" />
+          {!collapsed ? (
+            <>
+              <span className="min-w-0 flex-1 leading-tight">
+                <span className="block truncate text-[13px] font-medium">
+                  {merchant.name}
+                </span>
+                <span className="block truncate text-[11px] text-muted-foreground">
+                  {merchant.category}
+                </span>
+              </span>
+              <ChevronsUpDown className="size-3.5 shrink-0 text-muted-foreground" />
+            </>
+          ) : null}
         </button>
       </div>
 
       <nav className="flex-1 overflow-y-auto p-2">
         {navigation.map((section, i) => (
           <div key={section.group ?? "root"} className={cn(i > 0 && "mt-4")}>
-            {section.group ? (
+            {section.group && !collapsed ? (
               <div className="px-2 pb-1.5 text-[11px] font-medium text-muted-foreground">
                 {section.group}
               </div>
@@ -104,8 +141,12 @@ function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
                       href={href}
                       onClick={onNavigate}
                       aria-current={active ? "page" : undefined}
+                      title={collapsed ? label : undefined}
                       className={cn(
-                        "flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[13px] transition-colors",
+                        "flex items-center rounded-md text-[13px] transition-colors",
+                        collapsed
+                          ? "justify-center px-2 py-2"
+                          : "gap-2.5 px-2 py-1.5",
                         active
                           ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
                           : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground"
@@ -119,7 +160,11 @@ function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
                           active ? "text-foreground" : "text-muted-foreground"
                         )}
                       />
-                      {label}
+                      {collapsed ? (
+                        <span className="sr-only">{label}</span>
+                      ) : (
+                        label
+                      )}
                     </Link>
                   </li>
                 );
@@ -129,12 +174,28 @@ function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
         ))}
       </nav>
 
-      <div className="border-t p-3">
-        <p className="text-[11px] leading-relaxed text-muted-foreground">
-          Demonstration workspace. Every conversation, order and figure here is
-          illustrative. No channel or store is actually connected.
-        </p>
-      </div>
+      {collapsed && onToggle ? (
+        <div className="border-t p-2">
+          <button
+            type="button"
+            onClick={onToggle}
+            aria-label="Open the sidebar out"
+            title="Open the sidebar out"
+            className="flex w-full items-center justify-center rounded-md p-2 text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
+          >
+            <PanelLeftOpen className="size-4" />
+          </button>
+        </div>
+      ) : null}
+
+      {!collapsed ? (
+        <div className="border-t p-3">
+          <p className="text-[11px] leading-relaxed text-muted-foreground">
+            Demonstration workspace. Every conversation, order and figure here is
+            illustrative. No channel or store is actually connected.
+          </p>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -224,11 +285,20 @@ function Topbar({ onOpenNav }: { onOpenNav: () => void }) {
 
 function Shell({ children }: { children: React.ReactNode }) {
   const [navOpen, setNavOpen] = React.useState(false);
+  const [collapsed, setCollapsed] = React.useState(false);
 
   return (
     <div className="flex min-h-screen bg-background">
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[248px] border-r bg-sidebar lg:block">
-        <SidebarBody />
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-40 hidden border-r bg-sidebar transition-[width] duration-200 ease-out lg:block",
+          collapsed ? "w-14" : "w-[248px]"
+        )}
+      >
+        <SidebarBody
+          collapsed={collapsed}
+          onToggle={() => setCollapsed((v) => !v)}
+        />
       </aside>
 
       <Sheet open={navOpen} onOpenChange={setNavOpen}>
@@ -241,7 +311,12 @@ function Shell({ children }: { children: React.ReactNode }) {
         </SheetContent>
       </Sheet>
 
-      <div className="flex min-w-0 flex-1 flex-col lg:pl-[248px]">
+      <div
+        className={cn(
+          "flex min-w-0 flex-1 flex-col transition-[padding] duration-200 ease-out",
+          collapsed ? "lg:pl-14" : "lg:pl-[248px]"
+        )}
+      >
         <Topbar onOpenNav={() => setNavOpen(true)} />
         <main className="flex-1 px-4 py-5 sm:px-6 sm:py-6">
           <div className="mx-auto w-full max-w-[1400px]">{children}</div>
