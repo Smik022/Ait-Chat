@@ -343,7 +343,7 @@ function Roster({
   onCreate: (name: string, pageId?: string) => void;
 }) {
   return (
-    <Panel className="self-start lg:sticky lg:top-16">
+    <Panel>
       <div className="flex items-center justify-between border-b px-3 py-2.5">
         <span className="text-[12px] font-semibold">Your agents</span>
         <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
@@ -502,7 +502,8 @@ function AgentSettings({
 
   return (
     <Panel>
-      <div className="flex flex-wrap items-center gap-3 border-b px-4 py-3">
+      {/* Sticky, so the Save button never scrolls out of reach on a long form. */}
+      <div className="sticky top-14 z-10 flex flex-wrap items-center gap-3 rounded-t-lg border-b bg-card px-4 py-3">
         <span className="flex size-8 shrink-0 items-center justify-center rounded bg-muted font-mono text-[11px] font-medium">
           {agent.initials}
         </span>
@@ -967,7 +968,7 @@ export default function AgentsPage() {
 
         <TabsContent value="agents">
           <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,16rem)_minmax(0,1fr)] xl:grid-cols-[minmax(0,17rem)_minmax(0,1fr)]">
-            <div className="space-y-4">
+            <div className="space-y-4 lg:sticky lg:top-16 lg:self-start">
               <Roster
                 list={roster}
                 selectedId={selected.id}
