@@ -253,7 +253,7 @@ const SURFACE_METRICS = [
 const SURFACE_ROWS = [
   { time: "10:41:22", action: "Check an order", agent: "AS", outcome: "allowed", detail: "ORD-9316 → shipped · Pathao BD00182909", ms: "380ms" },
   { time: "10:41:05", action: "Look up a product", agent: "AS", outcome: "allowed", detail: "kurti under ৳1,600 → 3 matches", ms: "240ms" },
-  { time: "10:40:58", action: "Give a discount", agent: "AS", outcome: "blocked", detail: "15% asked for · your limit is 10% · sent to you", ms: "8ms" },
+  { time: "10:40:58", action: "Refund an order", agent: "AS", outcome: "blocked", detail: "৳3,890 is over your ৳3,000 limit · sent to you", ms: "8ms" },
   { time: "10:40:41", action: "Send a checkout link", agent: "AS", outcome: "allowed", detail: "৳3,890 · link sent", ms: "640ms" },
   { time: "10:40:30", action: "Refund an order", agent: "MG", outcome: "approved", detail: "ORD-9310 · ৳2,450 · you approved it", ms: "940ms" },
   { time: "10:40:12", action: "Sync stock", agent: "AS", outcome: "allowed", detail: "Silk Dupatta → 40 units back in", ms: "1120ms" },
@@ -271,7 +271,7 @@ const outcomeTone: Record<string, string> = {
 const INCOMING_ROWS = [
   { time: "10:41:38", action: "Check stock", agent: "AS", outcome: "allowed", detail: "Chaya Cotton Kurti · 42 left", ms: "290ms" },
   { time: "10:41:52", action: "Read what they want", agent: "AS", outcome: "allowed", detail: "price question · Banglish · 0.94", ms: "170ms" },
-  { time: "10:42:07", action: "Give a discount", agent: "AS", outcome: "blocked", detail: "12% asked for · your limit is 10% · sent to you", ms: "7ms" },
+  { time: "10:42:07", action: "Cancel an order", agent: "AS", outcome: "blocked", detail: "already with the courier · sent to you", ms: "7ms" },
   { time: "10:42:19", action: "Send a checkout link", agent: "AS", outcome: "allowed", detail: "৳1,290 · link sent", ms: "610ms" },
   { time: "10:42:34", action: "Hand over to a person", agent: "MG", outcome: "allowed", detail: "customer asked for a human · Ayesha took it", ms: "190ms" },
 ];
@@ -717,7 +717,7 @@ export default function Home() {
                 decides whether that call runs.
               </p>
               <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-                Over the discount ceiling, outside a messaging window, or outside the
+                Over your refund limit, outside a messaging window, or outside the
                 agent&rsquo;s role, it stops. The refusal is recorded next to everything
                 that passed.
               </p>
@@ -733,27 +733,27 @@ export default function Home() {
             <div className="overflow-hidden rounded-xl border bg-card">
               <div className="border-b px-4 py-3">
                 <div className="text-sm font-medium">
-                  The assistant wants to give a discount
+                  The assistant wants to refund an order
                 </div>
                 <div className="mt-0.5 text-xs text-muted-foreground">
-                  Chaya Cotton Kurti · customer pushed back on price
+                  Dhakai Jamdani Saree · customer says it arrived marked
                 </div>
               </div>
               <div className="border-b bg-muted/40 px-4 py-3">
                 <p className="text-[13px] leading-relaxed">
-                  <span className="text-muted-foreground">It wants to take </span>
-                  <span className="font-semibold">15% off</span>
-                  <span className="text-muted-foreground"> an unpaid order.</span>
+                  <span className="text-muted-foreground">It wants to send back </span>
+                  <span className="font-semibold">৳3,890</span>
+                  <span className="text-muted-foreground"> for ORD-9316.</span>
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Your rule says anything over 10% comes to you.
+                  Your rule says anything over ৳3,000 comes to you.
                 </p>
               </div>
               <ul className="divide-y">
                 {[
                   { label: "Is this a real action?", detail: "yes", ok: true },
                   { label: "Is the assistant allowed to do it?", detail: "yes", ok: true },
-                  { label: "Is it within your limits?", detail: "no, 15% is over 10%", ok: false },
+                  { label: "Is it within your limits?", detail: "no, ৳3,890 is over ৳3,000", ok: false },
                 ].map((s) => (
                   <li
                     key={s.label}
@@ -786,7 +786,7 @@ export default function Home() {
                   Stopped, and sent to you
                 </div>
                 <p className="mt-1 text-xs leading-relaxed text-block-ink">
-                  The discount never happened. It is waiting for your answer, and
+                  The money never left. It is waiting for your answer, and
                   the attempt is on the record either way.
                 </p>
               </div>

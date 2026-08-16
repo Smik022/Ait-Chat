@@ -162,7 +162,6 @@ function AddProduct({ onAdd }: { onAdd: (p: Product) => void }) {
                   name: "Nokshi Kurti",
                   category: "Kurti",
                   price: 1450,
-                  compareAt: null,
                   stock: Number(stock),
                   sizes: ["M", "L", "XL"],
                   colours: ["Maroon", "Navy"],
@@ -235,11 +234,6 @@ function Catalogue({ items }: { items: Product[] }) {
                     <span className="block font-mono font-medium tabular-nums">
                       {formatBDT(p.price)}
                     </span>
-                    {p.compareAt ? (
-                      <span className="block font-mono text-[10px] text-muted-foreground line-through tabular-nums">
-                        {formatBDT(p.compareAt)}
-                      </span>
-                    ) : null}
                   </td>
                   <td
                     className={cn(

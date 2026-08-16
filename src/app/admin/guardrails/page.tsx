@@ -43,8 +43,8 @@ function RuleSentence({ rule }: { rule: Guardrail }) {
 /* -------------------------------- Add form -------------------------------- */
 
 function AddRule({ onAdd, onCancel }: { onAdd: (r: Guardrail) => void; onCancel: () => void }) {
-  const [action, setAction] = React.useState<GuardrailAction>("discount");
-  const [threshold, setThreshold] = React.useState<number>(15);
+  const [action, setAction] = React.useState<GuardrailAction>("refund");
+  const [threshold, setThreshold] = React.useState<number>(3000);
   const [choice, setChoice] = React.useState<string>("");
   const [outcome, setOutcome] = React.useState<GuardrailOutcome>("ask");
 

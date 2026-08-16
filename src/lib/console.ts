@@ -43,7 +43,7 @@ export const examples = [
   "what is running low",
   "Chaya kurti 20 pieces left",
   "add nokshi kurti 1450 taka 12 pieces",
-  "never discount more than 10%",
+  "never refund more than 3000 taka",
 ];
 
 const digits = (s: string) => s.replace(/[^0-9]/g, "");
@@ -117,15 +117,16 @@ export function interpret(input: string, ctx: ConsoleContext): ConsoleResult {
   }
 
   // A new rule.
-  const pct = low.match(/(\d{1,2})\s*%/);
-  if (/(never|don'?t|do not|dont|only|max|maximum|limit)/.test(low) && pct) {
+  const amount = low.match(/(\d{3,6})/);
+  if (/(never|don'?t|do not|dont|only|max|maximum|limit)/.test(low) &&
+      /refund|ferot|taka/.test(low) && amount) {
     return {
       kind: "rule",
       rule: {
-        id: `G-${pct[1]}`,
-        action: /refund/.test(low) ? "refund" : "discount",
-        condition: `more than ${pct[1]}%`,
-        threshold: Number(pct[1]),
+        id: `G-${amount[1]}`,
+        action: "refund",
+        condition: `more than ৳${Number(amount[1]).toLocaleString("en-IN")}`,
+        threshold: Number(amount[1]),
         outcome: /never|do not|don'?t|dont/.test(low) ? "block" : "ask",
         enabled: true,
         stoppedThisWeek: 0,
@@ -152,7 +153,6 @@ export function interpret(input: string, ctx: ConsoleContext): ConsoleResult {
           name: name.replace(/\b\w/g, (c) => c.toUpperCase()),
           category: /saree/i.test(name) ? "Saree" : /kurti/i.test(name) ? "Kurti" : "Other",
           price,
-          compareAt: null,
           stock,
           sizes: ["M", "L", "XL"],
           colours: [],

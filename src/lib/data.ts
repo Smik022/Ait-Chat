@@ -128,7 +128,6 @@ export const agents: AgentDef[] = [
       "search_knowledge_base",
       "check_return_eligibility",
       "create_payment_link",
-      "apply_discount",
       "recover_cart",
       "send_restock_alert",
       "sync_inventory",
@@ -148,8 +147,6 @@ Quote only stock and prices that came back from a real check. Never state availa
 Bangla written in Roman letters is Banglish. Classify it directly, do not translate it first, because translation flattens exactly the cues sentiment depends on. Banglish spelling is not standardised: "ache", "ase" and "asey" are the same word, and one person will use two of them in the same thread. Treat them as equivalent.
 
 Policy answers come from the knowledge base and must be cited. If it does not cover something, say you will check rather than inventing a policy that sounds reasonable.
-
-You may apply a discount up to 10%. Above that you cannot, and you say so plainly rather than hinting it might be possible.
 
 You cannot issue refunds or approve exceptions. When one is clearly warranted, pass it for approval and say roughly how long that takes. Do not imply it is already approved.
 
@@ -222,7 +219,6 @@ export interface Product {
   name: string;
   category: string;
   price: number;
-  compareAt: number | null;
   stock: number;
   sizes: string[];
   colours: string[];
@@ -235,14 +231,14 @@ export interface Product {
 }
 
 export const products: Product[] = [
-  { id: "P-1042", name: "Chaya Cotton Kurti", category: "Kurti", price: 1290, compareAt: 1650, stock: 42, sizes: ["S", "M", "L", "XL"], colours: ["Dusty rose", "Sage", "Ivory"], material: "Cotton", status: "in-stock", sold: 320, addedVia: "photo", addedOn: "02 Aug" },
-  { id: "P-1098", name: "Nandini Embroidered Kurti", category: "Kurti", price: 1590, compareAt: null, stock: 8, sizes: ["M", "L", "XL"], colours: ["Sage"], material: "Cotton with embroidery", status: "low-stock", sold: 141, addedVia: "photo", addedOn: "04 Aug" },
-  { id: "P-1155", name: "Milan Anarkali Gown", category: "Gown", price: 2450, compareAt: 2900, stock: 0, sizes: ["M"], colours: ["Ivory"], material: "Georgette", status: "out-of-stock", sold: 87, addedVia: "manual", addedOn: "28 Jul" },
-  { id: "P-1207", name: "Dhakai Jamdani Saree", category: "Saree", price: 3890, compareAt: 4500, stock: 14, sizes: ["Free size"], colours: ["Cream"], material: "Handloom cotton", status: "in-stock", sold: 203, addedVia: "photo", addedOn: "29 Jul" },
-  { id: "P-1212", name: "Tangail Cotton Saree", category: "Saree", price: 2190, compareAt: null, stock: 3, sizes: ["Free size"], colours: ["Mustard"], material: "Cotton", status: "low-stock", sold: 119, addedVia: "reply", addedOn: "06 Aug" },
-  { id: "P-1330", name: "Leather Block-Heel Sandal", category: "Footwear", price: 1980, compareAt: 2400, stock: 26, sizes: ["36", "37", "38", "39", "40", "41"], colours: ["Tan"], material: "Leather", status: "in-stock", sold: 174, addedVia: "photo", addedOn: "31 Jul" },
-  { id: "P-1388", name: "Terracotta Earrings", category: "Accessories", price: 490, compareAt: null, stock: 61, sizes: ["One size"], colours: ["Rust"], material: "Terracotta", status: "in-stock", sold: 402, addedVia: "manual", addedOn: "24 Jul" },
-  { id: "P-1410", name: "Silk Dupatta", category: "Accessories", price: 890, compareAt: 1200, stock: 0, sizes: ["Free size"], colours: ["Emerald"], material: "Silk", status: "restocking", sold: 95, addedVia: "reply", addedOn: "01 Aug" },
+  { id: "P-1042", name: "Chaya Cotton Kurti", category: "Kurti", price: 1290, stock: 42, sizes: ["S", "M", "L", "XL"], colours: ["Dusty rose", "Sage", "Ivory"], material: "Cotton", status: "in-stock", sold: 320, addedVia: "photo", addedOn: "02 Aug" },
+  { id: "P-1098", name: "Nandini Embroidered Kurti", category: "Kurti", price: 1590, stock: 8, sizes: ["M", "L", "XL"], colours: ["Sage"], material: "Cotton with embroidery", status: "low-stock", sold: 141, addedVia: "photo", addedOn: "04 Aug" },
+  { id: "P-1155", name: "Milan Anarkali Gown", category: "Gown", price: 2450, stock: 0, sizes: ["M"], colours: ["Ivory"], material: "Georgette", status: "out-of-stock", sold: 87, addedVia: "manual", addedOn: "28 Jul" },
+  { id: "P-1207", name: "Dhakai Jamdani Saree", category: "Saree", price: 3890, stock: 14, sizes: ["Free size"], colours: ["Cream"], material: "Handloom cotton", status: "in-stock", sold: 203, addedVia: "photo", addedOn: "29 Jul" },
+  { id: "P-1212", name: "Tangail Cotton Saree", category: "Saree", price: 2190, stock: 3, sizes: ["Free size"], colours: ["Mustard"], material: "Cotton", status: "low-stock", sold: 119, addedVia: "reply", addedOn: "06 Aug" },
+  { id: "P-1330", name: "Leather Block-Heel Sandal", category: "Footwear", price: 1980, stock: 26, sizes: ["36", "37", "38", "39", "40", "41"], colours: ["Tan"], material: "Leather", status: "in-stock", sold: 174, addedVia: "photo", addedOn: "31 Jul" },
+  { id: "P-1388", name: "Terracotta Earrings", category: "Accessories", price: 490, stock: 61, sizes: ["One size"], colours: ["Rust"], material: "Terracotta", status: "in-stock", sold: 402, addedVia: "manual", addedOn: "24 Jul" },
+  { id: "P-1410", name: "Silk Dupatta", category: "Accessories", price: 890, stock: 0, sizes: ["Free size"], colours: ["Emerald"], material: "Silk", status: "restocking", sold: 95, addedVia: "reply", addedOn: "01 Aug" },
 ];
 
 export const addedViaMeta: Record<Product["addedVia"], string> = {
@@ -733,7 +729,6 @@ export const conversations: Conversation[] = [
         tools: [
           { id: "t1", tool: "recover_cart", args: { customer: "@nusrat.j" }, outcome: "allowed", detail: "1 item · window open 6h 04m", latencyMs: 260 },
           { id: "t2", tool: "check_inventory", args: { sku: "P-1212" }, outcome: "allowed", detail: "3 units · low stock", latencyMs: 300 },
-          { id: "t3", tool: "apply_discount", args: { percent: 15, reason: "cart recovery" }, outcome: "blocked", detail: "15% exceeds the 10% ceiling · not sent", latencyMs: 8, policy: "P-01" },
         ],
       },
     ],
@@ -1272,10 +1267,9 @@ export const retrievalDemo = {
 
 /**
  * A guardrail, written the way a shop owner would say it out loud:
- * "if an agent tries to give a discount of more than 10%, ask me first".
+ * "if an agent tries to refund more than 3,000 taka, ask me first".
  */
 export type GuardrailAction =
-  | "discount"
   | "refund"
   | "message"
   | "cancel"
@@ -1335,7 +1329,6 @@ export const guardrailActions: Record<
     conditions?: string[];
   }
 > = {
-  discount: { label: "give a discount", unit: "percent", defaultThreshold: 10 },
   refund: { label: "refund an order", unit: "taka", defaultThreshold: 3000 },
   price: { label: "change a price", unit: "taka", defaultThreshold: 500 },
   cancel: {
@@ -1356,13 +1349,11 @@ export const guardrailActions: Record<
 };
 
 export const guardrails: Guardrail[] = [
-  { id: "G-1", action: "discount", condition: "more than 10%", threshold: 10, outcome: "ask", enabled: true, stoppedThisWeek: 34 },
   { id: "G-2", action: "refund", condition: "more than ৳3,000", threshold: 3000, outcome: "ask", enabled: true, stoppedThisWeek: 21 },
   { id: "G-3", action: "reply", condition: "who asks for a person", outcome: "handoff", enabled: true, stoppedThisWeek: 18 },
   { id: "G-4", action: "reply", condition: "who sounds upset", outcome: "handoff", enabled: true, stoppedThisWeek: 9 },
   { id: "G-5", action: "cancel", condition: "that has already shipped", outcome: "ask", enabled: true, stoppedThisWeek: 6 },
   { id: "G-6", action: "price", condition: "more than ৳500", threshold: 500, outcome: "block", enabled: true, stoppedThisWeek: 2 },
-  { id: "G-7", action: "discount", condition: "more than 5%", threshold: 5, outcome: "ask", enabled: false, stoppedThisWeek: 0 },
 ];
 
 export const platformGuardrails: Guardrail[] = [
@@ -1388,7 +1379,6 @@ export const toolCatalog: ToolDef[] = [
   { name: "search_knowledge_base", label: "Look something up", description: "Search your policies, FAQs and product notes.", scopes: ["assistant"], mutating: false, callsToday: 1477 },
   { name: "check_return_eligibility", label: "Check if it can be returned", description: "Test an order against the return window and condition.", scopes: ["assistant"], mutating: false, callsToday: 143 },
   { name: "create_payment_link", label: "Send a checkout link", description: "Start an order and send the customer a way to pay.", scopes: ["assistant"], mutating: true, callsToday: 218 },
-  { name: "apply_discount", label: "Give a discount", description: "Take a percentage off an order that has not been paid yet.", scopes: ["assistant"], mutating: true, gatedBy: "G-1", callsToday: 96 },
   { name: "recover_cart", label: "Send a cart reminder", description: "Nudge someone who left something behind, if the window allows.", scopes: ["assistant"], mutating: true, gatedBy: "P-1", callsToday: 64 },
   { name: "send_restock_alert", label: "Send a restock alert", description: "Tell people waiting on an item that it is back.", scopes: ["assistant"], mutating: true, gatedBy: "P-1", callsToday: 31 },
   { name: "issue_refund", label: "Refund an order", description: "Send money back, in full or in part.", scopes: ["manager"], mutating: true, gatedBy: "G-2", callsToday: 24 },
@@ -1403,7 +1393,6 @@ const extraActionLabels: Record<string, string> = {
   classify_intent: "Read what they want",
   detect_language: "Work out the language",
   score_sentiment: "Judge the mood",
-  approve_discount: "Approve a discount",
   check_logistics: "Check with the courier",
 };
 
@@ -1428,7 +1417,7 @@ export interface GatewayEvent {
 export const gatewayLog: GatewayEvent[] = [
   { id: "g1", time: "10:41:22", tool: "get_order_status", agent: "assistant", outcome: "allowed", detail: "ORD-9317 → shipped · Pathao BD00182917", latencyMs: 380, conversationId: "CV-220" },
   { id: "g2", time: "10:41:05", tool: "search_products", agent: "assistant", outcome: "allowed", detail: "jamdani saree → 1 match", latencyMs: 240, conversationId: "CV-221" },
-  { id: "g3", time: "10:40:58", tool: "apply_discount", agent: "assistant", outcome: "blocked", detail: "15% asked for · your limit is 10% · sent to you", latencyMs: 8, policy: "P-01", conversationId: "CV-219" },
+  { id: "g3", time: "10:40:58", tool: "issue_refund", agent: "assistant", outcome: "blocked", detail: "৳3,890 is over your ৳3,000 limit · sent to you", latencyMs: 8, policy: "G-2", conversationId: "CV-219" },
   { id: "g4", time: "10:40:41", tool: "create_payment_link", agent: "assistant", outcome: "allowed", detail: "Draft order · ৳3,890 · link issued", latencyMs: 640, conversationId: "CV-221" },
   { id: "g5", time: "10:40:30", tool: "issue_refund", agent: "manager", outcome: "approved", detail: "ORD-9310 · ৳2,450 · approved by Ayesha Karim", latencyMs: 940, policy: "P-02", conversationId: "CV-216" },
   { id: "g6", time: "10:40:12", tool: "sync_inventory", agent: "assistant", outcome: "allowed", detail: "Silk Dupatta → 40 back in stock", latencyMs: 1120 },

@@ -41,7 +41,7 @@ red refuses, blue routes, violet marks machine authorship. Inter for text, Geist
 every identifier and quantity, Noto Sans Bengali for Bangla. 8px radius, compact density.
 
 STORY: The visitor watches a public comment become a private conversation become a paid
-order, sees a policy refuse an over-ceiling discount, and believes the machine can be
+order, sees a rule refuse a refund that is over her limit, and believes the machine can be
 trusted with money because they saw it stopped.
 
 FIRST VIEWPORT: 248px sidebar left, liveness carried by the topbar's live/paused control.

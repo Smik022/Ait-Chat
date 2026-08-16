@@ -221,7 +221,7 @@ function ResultCard({ result }: { result: ConsoleResult }) {
         <p className="text-[13px] leading-relaxed">
           <span className="text-live-ink">If the assistant tries to </span>
           <span className="font-medium">
-            {result.rule.action === "refund" ? "refund an order" : "give a discount"}
+            refund an order
           </span>
           <span className="text-live-ink"> {result.rule.condition}, </span>
           <span className="font-medium">
