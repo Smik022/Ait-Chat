@@ -32,14 +32,17 @@ export type ConsoleResult =
   | { kind: "assistant"; change: "tone" | "language" | "brief"; value: string }
   | { kind: "unsure"; heard: string };
 
-/** Things she can type, shown as chips so she never has to guess the syntax. */
-export const examples: { text: string; language?: Language }[] = [
-  { text: "Rehana r order kothay?", language: "banglish" },
-  { text: "koto taka pelam aj?", language: "banglish" },
-  { text: "Chaya kurti 20 pieces left" },
-  { text: "add nokshi kurti 1450 taka 12 pieces" },
-  { text: "assistant should always mention the delivery charge" },
-  { text: "never refund more than 3000 taka" },
+/** Things she can type, with what each one does, so she never guesses syntax. */
+export const examples: { text: string; does: string; language?: Language }[] = [
+  { text: "Rehana r order kothay?", does: "Find an order", language: "banglish" },
+  { text: "koto taka pelam aj?", does: "Count your money", language: "banglish" },
+  { text: "Chaya kurti 20 pieces left", does: "Change your stock" },
+  { text: "add nokshi kurti 1450 taka 12 pieces", does: "Add a product" },
+  {
+    text: "assistant should always mention the delivery charge",
+    does: "Teach your assistant",
+  },
+  { text: "never refund more than 3000 taka", does: "Set a rule" },
 ];
 
 /** What the simulated microphone hears, in the order it hears it. */

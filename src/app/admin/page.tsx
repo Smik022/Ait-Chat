@@ -2,7 +2,19 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ArrowUpRight, Check, CornerDownLeft, Mic, Undo2 } from "lucide-react";
+import {
+  ArrowUpRight,
+  Boxes,
+  Check,
+  CornerDownLeft,
+  GraduationCap,
+  Mic,
+  PackageSearch,
+  ShieldCheck,
+  Tag,
+  Undo2,
+  Wallet,
+} from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import {
@@ -169,8 +181,8 @@ function ResultCard({ result }: { result: ConsoleResult }) {
         <p className="mt-1 text-muted-foreground">
           The courier is holding <Mono>{formatBDT(result.owed)}</Mono> more. It
           reaches you after they deliver.{" "}
-          <span className="font-mono tabular-nums">{result.orders}</span> orders
-          altogether.
+          <span className="font-mono tabular-nums">{result.orders}</span>{" "}
+          {result.orders === 1 ? "order" : "orders"} altogether.
         </p>
       </div>
     );
@@ -265,6 +277,9 @@ function ResultCard({ result }: { result: ConsoleResult }) {
 }
 
 /* --------------------------------- Page ----------------------------------- */
+
+/** One icon per entry in `examples`, same order. */
+const starterIcons = [PackageSearch, Wallet, Boxes, Tag, GraduationCap, ShieldCheck];
 
 const thinkingLine = (asked: string) => {
   const low = asked.toLowerCase();
@@ -363,11 +378,6 @@ export default function AskPage() {
     if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
   }, [turnCount, busyLine]);
 
-  const inHand = seedOrders
-    .filter((o) => o.paymentState === "settled")
-    .reduce((n, o) => n + o.amount, 0);
-  const held = seedOrders.filter((o) => o.paymentState === "collected");
-  const owed = held.reduce((n, o) => n + o.amount, 0);
   const needsYou = conversations.filter(
     (c) => c.status === "awaiting-approval" || c.status === "with-human"
   );
@@ -389,16 +399,38 @@ export default function AskPage() {
               </p>
               <p className="mt-1.5 text-[13px] text-muted-foreground">
                 Ask in Bangla, Banglish or English, the way you would say it out
-                loud.
+                loud. Tap one of these to see how.
               </p>
 
-              <div className="mt-7 max-w-md space-y-2 text-[13px] leading-relaxed">
-                <p>
-                  You have{" "}
-                  <Mono className="font-semibold">{formatBDT(inHand)}</Mono> in
-                  hand. The courier will send you <Mono>{formatBDT(owed)}</Mono>{" "}
-                  from {held.length} deliveries.
-                </p>
+              <div className="mt-6 grid w-full max-w-xl gap-2 text-left sm:grid-cols-2">
+                {examples.map((e, i) => {
+                  const Icon = starterIcons[i];
+                  return (
+                    <button
+                      key={e.text}
+                      type="button"
+                      onClick={() => {
+                        setInput(e.text);
+                        inputRef.current?.focus();
+                      }}
+                      className="rounded-md border bg-card px-3 py-2.5 text-left transition-colors hover:bg-muted"
+                    >
+                      <span className="flex items-center gap-2 text-[12px] font-medium">
+                        <Icon className="size-3.5 shrink-0 text-muted-foreground" />
+                        {e.does}
+                      </span>
+                      <span
+                        lang={e.language ? langTag(e.language) : undefined}
+                        className="mt-1 block truncate text-[12px] text-muted-foreground"
+                      >
+                        “{e.text}”
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="mt-6 max-w-md text-[13px] leading-relaxed">
                 <p className="text-muted-foreground">
                   {lowest ? (
                     <>
@@ -494,22 +526,26 @@ export default function AskPage() {
 
         <div className="border-t p-3">
           <div className="mx-auto max-w-2xl">
-            <div className="flex flex-wrap gap-1.5">
-              {examples.map((e) => (
-                <button
-                  key={e.text}
-                  type="button"
-                  lang={e.language ? langTag(e.language) : undefined}
-                  onClick={() => {
-                    setInput(e.text);
-                    inputRef.current?.focus();
-                  }}
-                  className="rounded-full border px-2.5 py-1 text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                >
-                  {e.text}
-                </button>
-              ))}
-            </div>
+            {/* Once the thread is going, the starter grid is gone, so the
+                examples come back as compact reminders above the box. */}
+            {!empty ? (
+              <div className="flex flex-wrap gap-1.5">
+                {examples.map((e) => (
+                  <button
+                    key={e.text}
+                    type="button"
+                    lang={e.language ? langTag(e.language) : undefined}
+                    onClick={() => {
+                      setInput(e.text);
+                      inputRef.current?.focus();
+                    }}
+                    className="rounded-full border px-2.5 py-1 text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  >
+                    {e.text}
+                  </button>
+                ))}
+              </div>
+            ) : null}
 
             <form
               onSubmit={(e) => {
