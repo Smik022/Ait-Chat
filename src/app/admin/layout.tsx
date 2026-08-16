@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   BookOpen,
   ChevronsUpDown,
-  Gauge,
+  Sparkles,
   Inbox,
   MessageSquareQuote,
   Package,
@@ -33,29 +33,16 @@ import { CommandMenu } from "@/components/command-menu";
 const navigation = [
   {
     group: null,
-    items: [{ href: "/admin", label: "Overview", icon: Gauge }],
-  },
-  {
-    group: "Conversations",
     items: [
-      { href: "/admin/inbox", label: "Inbox", icon: Inbox },
+      { href: "/admin", label: "Ask", icon: Sparkles },
+      { href: "/admin/inbox", label: "Messages", icon: Inbox },
       { href: "/admin/comments", label: "Comments", icon: MessageSquareQuote },
-    ],
-  },
-  {
-    group: "Automation",
-    items: [
-      { href: "/admin/agents", label: "Agents", icon: Users },
-      { href: "/admin/guardrails", label: "Guardrails", icon: ShieldCheck },
-      { href: "/admin/knowledge", label: "Knowledge", icon: BookOpen },
-    ],
-  },
-  {
-    group: "Commerce",
-    items: [
-      { href: "/admin/products", label: "Products", icon: Tag },
       { href: "/admin/orders", label: "Orders", icon: Package },
-      { href: "/admin/integrations", label: "Integrations", icon: Plug },
+      { href: "/admin/products", label: "Products", icon: Tag },
+      { href: "/admin/agents", label: "Your assistant", icon: Users },
+      { href: "/admin/guardrails", label: "Your rules", icon: ShieldCheck },
+      { href: "/admin/knowledge", label: "Setup", icon: BookOpen },
+      { href: "/admin/integrations", label: "Channels", icon: Plug },
     ],
   },
 ];

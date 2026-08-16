@@ -2,434 +2,468 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight } from "lucide-react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { ArrowUpRight, Check, CornerDownLeft, Package, Truck } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import {
-  actionLabel,
-  agents,
-  benchmarkFor,
-  conversations,
   conversationStatusMeta,
+  conversations,
   formatBDT,
-  formatBDTScale,
-  funnel,
-  languageMix,
-  orders,
-  revenueSeries,
+  orderStatusMeta,
+  orders as seedOrders,
+  paymentStateMeta,
+  products as seedProducts,
+  type Product,
 } from "@/lib/data";
-
-const banglishBenchmark = benchmarkFor("Banglish sentiment accuracy");
-import { useLive, useMounted, useSettledNumber } from "@/lib/live";
 import {
-  AgentBadge,
-  BenchmarkNote,
+  examples,
+  interpret,
+  summarise,
+  type ConsoleResult,
+  type ConsoleTurn,
+} from "@/lib/console";
+import {
   ChannelBadge,
   Chip,
   Metric,
   MetricRow,
   Mono,
-  OutcomeChip,
-  PageHeader,
   Panel,
   PanelHeader,
-  StatusDot,
+
 } from "@/components/primitives";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from "@/components/ui/chart";
 
-const chartConfig = {
-  revenue: { label: "Attributed revenue", color: "var(--chart-1)" },
-} satisfies ChartConfig;
+/* ------------------------------ Result cards ------------------------------ */
 
-function LiveActivity() {
-  const { events, newestId, live } = useLive();
-  const mounted = useMounted();
-
+function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <Panel className="flex min-h-0 flex-col">
-      <PanelHeader
-        title="What the agents did"
-        description="Every action they wanted to take, and whether your rules allowed it."
-        action={
-          <Link
-            href="/admin/guardrails"
-            className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Open
-            <ArrowRight className="size-3" />
-          </Link>
-        }
-      />
-      <ul className="max-h-[26rem] overflow-auto">
-        {events.slice(0, 14).map((e) => (
-          <li
-            key={e.id}
-            className={cn(
-              "border-b px-4 py-2.5 last:border-0",
-              mounted && live && e.id === newestId && "animate-row-in"
-            )}
-          >
-            <div className="flex items-center gap-2">
-              <span className="shrink-0 font-mono text-[10px] text-muted-foreground tabular-nums">
-                {e.time}
-              </span>
-              <span className="truncate text-[13px] font-medium">
-                {actionLabel(e.tool)}
-              </span>
-              <span className="ml-auto shrink-0">
-                <OutcomeChip outcome={e.outcome} />
-              </span>
-            </div>
-            <div className="mt-0.5 flex items-center gap-2 pl-[2.85rem]">
-              <AgentBadge agent={e.agent} />
-              <span className="min-w-0 truncate text-[11px] text-muted-foreground">
-                {e.detail}
-              </span>
-            </div>
-          </li>
-        ))}
-      </ul>
-    </Panel>
+    <div className="flex items-baseline justify-between gap-3 py-1">
+      <span className="text-[12px] text-muted-foreground">{label}</span>
+      <span className="text-[13px] font-medium">{value}</span>
+    </div>
   );
 }
 
-function Workforce() {
-  return (
-    <Panel>
-      <PanelHeader
-        title="Agent workforce"
-        description="Who is handling what right now."
-        action={
-          <Link
-            href="/admin/agents"
-            className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Open
-            <ArrowRight className="size-3" />
-          </Link>
-        }
-      />
-      <ul className="divide-y">
-        {agents.map((a) => (
-          <li key={a.id} className="flex items-center gap-3 px-4 py-2.5">
-            <span className="flex size-7 shrink-0 items-center justify-center rounded bg-muted font-mono text-[10px] font-medium">
-              {a.initials}
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-[13px] font-medium">{a.name}</span>
-              <span className="block truncate text-[11px] text-muted-foreground">
-                {a.title}
-              </span>
-            </span>
-            <span className="flex shrink-0 items-center gap-2.5">
-              {a.handlesNow > 0 ? (
-                <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
-                  {a.handlesNow}
-                </span>
-              ) : null}
-              <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                <StatusDot
-                  className={
-                    a.status === "online"
-                      ? "bg-live"
-                      : a.status === "busy"
-                        ? "bg-pend"
-                        : "bg-muted-foreground"
-                  }
-                  pulse={a.status === "busy"}
-                />
-                {a.status}
-              </span>
-            </span>
-          </li>
-        ))}
-      </ul>
-    </Panel>
-  );
-}
-
-function NeedsAPerson() {
-  const waiting = conversations.filter(
-    (c) => c.status === "awaiting-approval" || c.status === "with-human"
-  );
-  const refund = orders.find((o) => o.status === "return-requested");
-
-  return (
-    <Panel>
-      <PanelHeader
-        title="Needs a person"
-        description="Held at the gateway until someone decides."
-      />
-      <ul className="divide-y">
-        {waiting.map((c) => (
-          <li key={c.id} className="px-4 py-3">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="truncate text-[13px] font-medium">
-                    {c.customer}
-                  </span>
-                  <ChannelBadge channel={c.channel} withLabel={false} />
-                </div>
-                <p className="mt-1 text-xs text-muted-foreground">{c.intent}</p>
-              </div>
-              <Chip tone={conversationStatusMeta[c.status].tone}>
-                {conversationStatusMeta[c.status].label}
-              </Chip>
-            </div>
-            <Link
-              href={`/admin/inbox?thread=${c.id}`}
-              className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-foreground underline-offset-4 hover:underline"
-            >
-              Review thread
-              <ArrowUpRight className="size-3" />
-            </Link>
-          </li>
-        ))}
-        {refund ? (
-          <li className="px-4 py-3">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <Mono className="text-[12px] font-medium">{refund.id}</Mono>
-                  <Chip tone="bg-pend-soft text-pend-ink">Refund review</Chip>
-                </div>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {formatBDT(refund.amount)} · {refund.customer} · under the ৳3,000
-                  ceiling, outside the Assistant&rsquo;s scope
-                </p>
-              </div>
-            </div>
-            <Link
-              href={`/admin/orders?order=${refund.id}`}
-              className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-foreground underline-offset-4 hover:underline"
-            >
-              Open order
-              <ArrowUpRight className="size-3" />
-            </Link>
-          </li>
-        ) : null}
-      </ul>
-    </Panel>
-  );
-}
-
-function Funnel() {
-  const top = funnel[0].value;
-  return (
-    <Panel>
-      <PanelHeader
-        title="Comment to order"
-        description="The last post, followed all the way through."
-        action={
-          <Link
-            href="/admin/comments"
-            className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Open
-            <ArrowRight className="size-3" />
-          </Link>
-        }
-      />
-      <ul className="divide-y">
-        {funnel.map((s, i) => {
-          const pct = Math.round((s.value / top) * 100);
-          const drop =
-            i === 0 ? null : Math.round((s.value / funnel[i - 1].value) * 100);
-          return (
-            <li key={s.stage} className="px-4 py-2.5">
-              <div className="flex items-baseline justify-between gap-3">
-                <span className="text-[13px] font-medium">{s.stage}</span>
-                <span className="flex items-baseline gap-2">
-                  {drop !== null ? (
-                    <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
-                      {drop}%
-                    </span>
-                  ) : null}
-                  <span className="font-mono text-sm font-medium tabular-nums">
-                    {s.value}
-                  </span>
-                </span>
-              </div>
-              <div className="mt-1.5 flex items-center gap-2">
-                <div className="h-1 flex-1 overflow-hidden rounded-full bg-muted">
-                  <div
-                    className="h-full rounded-full bg-live"
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
-                <span className="w-36 shrink-0 truncate text-[11px] text-muted-foreground">
-                  {s.note}
-                </span>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
-    </Panel>
-  );
-}
-
-function RevenueChart() {
-  return (
-    <Panel>
-      <PanelHeader
-        title="Attributed revenue"
-        description="Orders whose conversation began in a social channel."
-        action={
-          <span className="font-mono text-sm font-medium tabular-nums">
-            {formatBDTScale(revenueSeries.reduce((a, d) => a + d.revenue, 0))}
-          </span>
-        }
-      />
-      <div className="p-4">
-        <ChartContainer config={chartConfig} className="aspect-auto h-[220px] w-full">
-          <BarChart data={revenueSeries} margin={{ left: 4, right: 4, top: 4 }}>
-            <CartesianGrid vertical={false} strokeDasharray="2 4" />
-            <XAxis
-              dataKey="day"
-              tickLine={false}
-              axisLine={false}
-              tickMargin={10}
-              fontSize={11}
-            />
-            <YAxis
-              tickLine={false}
-              axisLine={false}
-              width={44}
-              fontSize={11}
-              tickFormatter={(v) => `${Number(v) / 1000}k`}
-            />
-            <ChartTooltip
-              content={
-                <ChartTooltipContent
-                  formatter={(value) => formatBDT(Number(value))}
-                />
-              }
-            />
-            <Bar dataKey="revenue" fill="var(--color-revenue)" radius={[3, 3, 0, 0]} />
-          </BarChart>
-        </ChartContainer>
+function ResultCard({ result }: { result: ConsoleResult }) {
+  if (result.kind === "order") {
+    const o = result.order;
+    return (
+      <div className="rounded-md border bg-card p-3">
+        <div className="flex items-center gap-2">
+          <Mono className="text-[13px] font-medium">{o.id}</Mono>
+          <Chip tone={orderStatusMeta[o.status].tone}>
+            {orderStatusMeta[o.status].label}
+          </Chip>
+          <Chip tone={paymentStateMeta[o.paymentState].tone}>
+            {paymentStateMeta[o.paymentState].label}
+          </Chip>
+        </div>
+        <div className="mt-2">
+          <Row label="Item" value={`${o.product} × ${o.qty}`} />
+          <Row label="Amount" value={formatBDT(o.amount)} />
+          <Row label="Going to" value={o.area} />
+          <Row label="Courier" value={`${o.courier} · ${o.tracking}`} />
+          <Row
+            label="Rung to confirm"
+            value={o.confirmedByCall ? "Yes" : "Not yet"}
+          />
+        </div>
+        <Link
+          href={`/admin/orders?order=${o.id}`}
+          className="mt-2 inline-flex items-center gap-1 text-[12px] font-medium underline-offset-4 hover:underline"
+        >
+          Open it <ArrowUpRight className="size-3" />
+        </Link>
       </div>
-    </Panel>
-  );
-}
+    );
+  }
 
-function LanguageSplit() {
-  return (
-    <Panel>
-      <PanelHeader
-        title="Language of inbound messages"
-        description="What customers actually write in."
-      />
-      <div className="space-y-3 p-4">
-        {languageMix.map((l) => (
-          <div key={l.name}>
-            <div className="flex items-baseline justify-between text-[13px]">
-              <span>{l.name}</span>
-              <span className="font-mono tabular-nums">{l.value}%</span>
-            </div>
-            <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-muted">
-              <div
-                className="h-full rounded-full bg-foreground/70"
-                style={{ width: `${l.value}%` }}
-              />
-            </div>
+  if (result.kind === "customer") {
+    return (
+      <div className="rounded-md border bg-card">
+        <ul className="divide-y">
+          {result.orders.map((o) => (
+            <li key={o.id} className="flex items-center gap-3 px-3 py-2">
+              <Mono className="text-[12px] font-medium">{o.id}</Mono>
+              <span className="min-w-0 flex-1 truncate text-[12px] text-muted-foreground">
+                {o.product}
+              </span>
+              <span className="font-mono text-[12px] tabular-nums">
+                {formatBDT(o.amount)}
+              </span>
+              <Chip tone={orderStatusMeta[o.status].tone}>
+                {orderStatusMeta[o.status].label}
+              </Chip>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
+
+  if (result.kind === "product" || result.kind === "added") {
+    const p = result.kind === "product" ? result.product : result.product;
+    return (
+      <div className="rounded-md border bg-card p-3">
+        <div className="flex items-center gap-2">
+          <span className="text-[13px] font-medium">{p.name}</span>
+          {result.kind === "added" ? (
+            <Chip tone="bg-live-soft text-live-ink">
+              <Check className="size-2.5" strokeWidth={3} />
+              Added
+            </Chip>
+          ) : null}
+        </div>
+        <div className="mt-2">
+          <Row label="Price" value={formatBDT(p.price)} />
+          <Row label="In stock" value={`${p.stock}`} />
+          {p.sizes.length ? <Row label="Sizes" value={p.sizes.join(", ")} /> : null}
+        </div>
+        {result.kind === "added" ? (
+          <p className="mt-2 text-[11px] text-muted-foreground">
+            Your assistant can quote it from now on. Add colours and fabric on the
+            Products page whenever you like.
+          </p>
+        ) : null}
+      </div>
+    );
+  }
+
+  if (result.kind === "stock") {
+    return (
+      <div className="rounded-md border border-live/40 bg-live-soft p-3">
+        <div className="flex items-center gap-2">
+          <Check className="size-3.5 shrink-0 text-live" strokeWidth={3} />
+          <span className="text-[13px] font-medium">{result.product.name}</span>
+        </div>
+        <p className="mt-1.5 text-[13px] text-live-ink">
+          <span className="font-mono line-through opacity-60">{result.from}</span>{" "}
+          <span className="font-mono font-semibold">{result.to}</span> in stock.
+        </p>
+      </div>
+    );
+  }
+
+  if (result.kind === "money") {
+    return (
+      <div className="grid gap-2 sm:grid-cols-3">
+        <div className="rounded-md border bg-card p-3">
+          <div className="text-[11px] text-muted-foreground">In your hand</div>
+          <div className="mt-1 font-mono text-lg font-semibold tabular-nums">
+            {formatBDT(result.today)}
           </div>
-        ))}
-        <div className="border-t pt-3">
-          <BenchmarkNote source={banglishBenchmark.source}>
-            Published {banglishBenchmark.label.toLowerCase()} tops out at{" "}
-            {banglishBenchmark.range}, so low-confidence classifications route to a
-            person rather than guess.
-          </BenchmarkNote>
+        </div>
+        <div className="rounded-md border bg-card p-3">
+          <div className="text-[11px] text-muted-foreground">Courier owes you</div>
+          <div className="mt-1 font-mono text-lg font-semibold tabular-nums">
+            {formatBDT(result.owed)}
+          </div>
+        </div>
+        <div className="rounded-md border bg-card p-3">
+          <div className="text-[11px] text-muted-foreground">Orders</div>
+          <div className="mt-1 font-mono text-lg font-semibold tabular-nums">
+            {result.orders}
+          </div>
         </div>
       </div>
+    );
+  }
+
+  if (result.kind === "low") {
+    if (!result.items.length) {
+      return (
+        <div className="rounded-md border bg-card p-3 text-[13px]">
+          Nothing is running low.
+        </div>
+      );
+    }
+    return (
+      <div className="rounded-md border bg-card">
+        <ul className="divide-y">
+          {result.items.map((p) => (
+            <li key={p.id} className="flex items-center gap-3 px-3 py-2">
+              <span className="min-w-0 flex-1 truncate text-[13px]">{p.name}</span>
+              <span
+                className={cn(
+                  "font-mono text-[13px] font-medium tabular-nums",
+                  p.stock === 0 ? "text-block-ink" : "text-pend-ink"
+                )}
+              >
+                {p.stock}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
+
+  if (result.kind === "thread") {
+    return (
+      <div className="rounded-md border bg-card p-3">
+        <p className="text-[13px]">
+          <span className="font-medium">{result.name}</span> has not ordered yet.
+          You are still talking about {result.intent.toLowerCase()}.
+        </p>
+        <Link
+          href={`/admin/inbox?thread=${result.id}`}
+          className="mt-2 inline-flex items-center gap-1 text-[12px] font-medium underline-offset-4 hover:underline"
+        >
+          Open the conversation <ArrowUpRight className="size-3" />
+        </Link>
+      </div>
+    );
+  }
+
+  if (result.kind === "rule") {
+    return (
+      <div className="rounded-md border border-live/40 bg-live-soft p-3">
+        <p className="text-[13px] leading-relaxed">
+          <span className="text-live-ink">If the assistant tries to </span>
+          <span className="font-medium">
+            {result.rule.action === "refund" ? "refund an order" : "give a discount"}
+          </span>
+          <span className="text-live-ink"> {result.rule.condition}, </span>
+          <span className="font-medium">
+            {result.rule.outcome === "block" ? "don't let it" : "ask me first"}
+          </span>
+        </p>
+        <Link
+          href="/admin/guardrails"
+          className="mt-2 inline-flex items-center gap-1 text-[12px] font-medium underline-offset-4 hover:underline"
+        >
+          See all your rules <ArrowUpRight className="size-3" />
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-md border bg-card p-3">
+      <p className="text-[13px]">
+        I did not understand that one. Try one of these.
+      </p>
+    </div>
+  );
+}
+
+/* -------------------------------- Console --------------------------------- */
+
+function Console({
+  products,
+  onProducts,
+}: {
+  products: Product[];
+  onProducts: (next: Product[]) => void;
+}) {
+  const [input, setInput] = React.useState("");
+  const [turns, setTurns] = React.useState<ConsoleTurn[]>([]);
+  const nextId = React.useRef(1);
+
+  const run = (raw: string) => {
+    const asked = raw.trim();
+    if (!asked) return;
+    const result = interpret(asked, { products, orders: seedOrders });
+
+    // Actions that change something, change it.
+    if (result.kind === "stock") {
+      onProducts(
+        products.map((p) =>
+          p.id === result.product.id
+            ? {
+                ...p,
+                stock: result.to,
+                status:
+                  result.to === 0
+                    ? "out-of-stock"
+                    : result.to <= 8
+                      ? "low-stock"
+                      : "in-stock",
+              }
+            : p
+        )
+      );
+    }
+    if (result.kind === "added") onProducts([result.product, ...products]);
+
+    setTurns((prev) => [{ id: nextId.current++, asked, result }, ...prev]);
+    setInput("");
+  };
+
+  return (
+    <Panel>
+      <div className="p-4">
+        <h1 className="text-lg font-semibold tracking-tight">
+          What do you need?
+        </h1>
+        <p className="mt-1 text-[13px] text-muted-foreground">
+          Type it the way you would say it. Add something, check an order, change
+          how many you have left.
+        </p>
+
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            run(input);
+          }}
+          className="mt-3 flex gap-2"
+        >
+          <label htmlFor="ask" className="sr-only">
+            What do you need?
+          </label>
+          <input
+            id="ask"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="where is Rehana's order"
+            autoComplete="off"
+            className="h-11 flex-1 rounded-md border bg-background px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+          />
+          <button
+            type="submit"
+            disabled={!input.trim()}
+            className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-md bg-primary px-4 text-[13px] font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
+          >
+            Ask
+            <CornerDownLeft className="size-3.5" />
+          </button>
+        </form>
+
+        <div className="mt-2.5 flex flex-wrap gap-1.5">
+          {examples.map((e) => (
+            <button
+              key={e}
+              type="button"
+              onClick={() => run(e)}
+              className="rounded-full border px-2.5 py-1 text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              {e}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {turns.length ? (
+        <ul className="divide-y border-t">
+          {turns.map((t) => (
+            <li key={t.id} className="animate-row-in space-y-2 px-4 py-3">
+              <div className="flex items-baseline gap-2">
+                <span className="text-[13px] font-medium">{t.asked}</span>
+                <span className="text-[11px] text-muted-foreground">
+                  {summarise(t.result)}
+                </span>
+              </div>
+              <ResultCard result={t.result} />
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </Panel>
   );
 }
 
-export default function OverviewPage() {
-  const { metrics } = useLive();
-  const mounted = useMounted();
-  const revenue = useSettledNumber(metrics.revenueAttributed);
-  const conversationCount = useSettledNumber(metrics.conversationsToday);
+/* --------------------------------- Page ----------------------------------- */
+
+export default function AskPage() {
+  const [products, setProducts] = React.useState<Product[]>(seedProducts);
+
+  const needsYou = conversations.filter(
+    (c) => c.status === "awaiting-approval" || c.status === "with-human"
+  );
+  const inHand = seedOrders
+    .filter((o) => o.paymentState === "settled")
+    .reduce((n, o) => n + o.amount, 0);
+  const owed = seedOrders
+    .filter((o) => o.paymentState === "collected")
+    .reduce((n, o) => n + o.amount, 0);
+  const lowCount = products.filter((p) => p.stock <= 8).length;
 
   return (
     <div className="space-y-5">
-      <PageHeader
-        title="Overview"
-        description="Everything the agent workforce is doing right now, and everything it was not allowed to do."
-        actions={
-          <>
-            <span className="inline-flex h-8 items-center rounded-md border px-2.5 text-xs text-muted-foreground">
-              Last 8 days
-            </span>
-            <Link
-              href="/admin/comments"
-              className="inline-flex h-8 items-center gap-1.5 rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90"
-            >
-              Watch a comment convert
-              <ArrowRight className="size-3.5" />
-            </Link>
-          </>
-        }
-      />
+      <Console products={products} onProducts={setProducts} />
 
       <MetricRow>
-        <Metric
-          label="Conversations today"
-          value={mounted ? conversationCount.toLocaleString("en-US") : "1,284"}
-          trend={{ direction: "up", amount: "23%" }}
-          basis="vs. 7-day average"
-        />
-        <Metric
-          label="Attributed revenue"
-          value={formatBDT(mounted ? revenue : metrics.revenueAttributed)}
-          trend={{ direction: "up", amount: "34%" }}
-          basis="vs. 7-day average"
-        />
-        <Metric
-          label="Resolved without a person"
-          value={`${metrics.containment.toFixed(1)}%`}
-          trend={{ direction: "up", amount: "6.8pt" }}
-          basis={`${metrics.blockedToday} calls blocked today`}
-        />
-        <Metric
-          label="Waiting on a person"
-          value={metrics.approvalsWaiting}
-          basis="approvals and escalations"
-        />
+        <Metric label="Money in your hand" value={formatBDT(inHand)} basis="paid up front" />
+        <Metric label="Courier owes you" value={formatBDT(owed)} basis="cash collected" />
+        <Metric label="Running low" value={lowCount} basis="restock these" />
+        <Metric label="Waiting on you" value={needsYou.length} basis="nothing else needs you" />
       </MetricRow>
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
-        {/* min-w-0 or the table's min-content width blows the grid track out and
-            scrolls the whole document sideways. */}
-        <div className="min-w-0 space-y-5">
-          <LiveActivity />
-          <Funnel />
-        </div>
-        <div className="space-y-5">
-          <Workforce />
-          <NeedsAPerson />
-        </div>
-      </div>
+      <div className="grid gap-5 lg:grid-cols-2">
+        <Panel>
+          <PanelHeader
+            title="Waiting on you"
+            description="Your assistant stopped and asked."
+          />
+          <ul className="divide-y">
+            {needsYou.map((c) => (
+              <li key={c.id} className="px-4 py-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="truncate text-[13px] font-medium">
+                        {c.customer}
+                      </span>
+                      <ChannelBadge channel={c.channel} withLabel={false} />
+                    </div>
+                    <p className="mt-1 text-[12px] text-muted-foreground">{c.intent}</p>
+                  </div>
+                  <Chip tone={conversationStatusMeta[c.status].tone}>
+                    {conversationStatusMeta[c.status].label}
+                  </Chip>
+                </div>
+                <Link
+                  href={`/admin/inbox?thread=${c.id}`}
+                  className="mt-2 inline-flex items-center gap-1 text-[12px] font-medium underline-offset-4 hover:underline"
+                >
+                  Have a look <ArrowUpRight className="size-3" />
+                </Link>
+              </li>
+            ))}
+            {!needsYou.length ? (
+              <li className="px-4 py-8 text-center text-[13px] text-muted-foreground">
+                Nothing needs you right now.
+              </li>
+            ) : null}
+          </ul>
+        </Panel>
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
-        <RevenueChart />
-        <LanguageSplit />
+        <Panel>
+          <PanelHeader
+            title="Going out today"
+            description="Orders on their way to someone."
+          />
+          <ul className="divide-y">
+            {seedOrders
+              .filter((o) => o.status === "shipped" || o.status === "processing")
+              .slice(0, 5)
+              .map((o) => (
+                <li key={o.id} className="flex items-center gap-3 px-4 py-2.5">
+                  <Truck className="size-3.5 shrink-0 text-muted-foreground" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[13px] font-medium">
+                      {o.customer}
+                    </span>
+                    <span className="block truncate text-[11px] text-muted-foreground">
+                      {o.area} · {o.courier}
+                    </span>
+                  </span>
+                  <span className="shrink-0 font-mono text-[13px] font-medium tabular-nums">
+                    {formatBDT(o.amount)}
+                  </span>
+                </li>
+              ))}
+          </ul>
+          <div className="border-t px-4 py-2.5">
+            <Link
+              href="/admin/orders"
+              className="inline-flex items-center gap-1 text-[12px] font-medium underline-offset-4 hover:underline"
+            >
+              <Package className="size-3" />
+              All orders
+            </Link>
+          </div>
+        </Panel>
       </div>
     </div>
   );

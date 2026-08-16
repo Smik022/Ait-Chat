@@ -26,15 +26,15 @@ import {
 import { conversations, orders } from "@/lib/data";
 
 const routes = [
-  { href: "/admin", label: "Overview", icon: Gauge },
-  { href: "/admin/inbox", label: "Inbox", icon: Inbox },
+  { href: "/admin", label: "Ask", icon: Gauge },
+  { href: "/admin/inbox", label: "Messages", icon: Inbox },
   { href: "/admin/comments", label: "Comments", icon: MessageSquareQuote },
-  { href: "/admin/agents", label: "Agents", icon: Users },
-  { href: "/admin/guardrails", label: "Guardrails", icon: ShieldCheck },
-  { href: "/admin/knowledge", label: "Knowledge", icon: BookOpen },
+  { href: "/admin/agents", label: "Your assistant", icon: Users },
+  { href: "/admin/guardrails", label: "Your rules", icon: ShieldCheck },
+  { href: "/admin/knowledge", label: "Setup", icon: BookOpen },
   { href: "/admin/products", label: "Products", icon: Tag },
   { href: "/admin/orders", label: "Orders", icon: Package },
-  { href: "/admin/integrations", label: "Integrations", icon: Plug },
+  { href: "/admin/integrations", label: "Channels", icon: Plug },
 ];
 
 export function CommandMenu({
