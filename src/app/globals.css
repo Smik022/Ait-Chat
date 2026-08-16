@@ -9,7 +9,7 @@
   --color-foreground: var(--foreground);
   /* Neither Inter nor Geist Mono contains ৳ (U+09F3), so Noto Sans Bengali sits in
      both stacks. Without it the taka sign resolves to an arbitrary system font at a
-     different weight and height — the most visible typographic defect in the product. */
+     different weight and height, the most visible typographic defect in the product. */
   --font-sans: var(--font-inter), var(--font-bengali), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), var(--font-bengali), ui-monospace, monospace;
   --font-bengali: var(--font-bengali);
@@ -99,7 +99,7 @@
   --input: oklch(0.881 0.01 106);
   --ring: oklch(0.44 0.093 163);
 
-  /* live / allowed / paid / positive — the inherited logo green */
+  /* live / allowed / paid / positive: the inherited logo green */
   --live: oklch(0.44 0.084 163);
   --live-soft: oklch(0.955 0.026 163);
   --live-ink: oklch(0.37 0.072 163);
@@ -115,7 +115,7 @@
   --route: oklch(0.53 0.14 254);
   --route-soft: oklch(0.958 0.024 254);
   --route-ink: oklch(0.45 0.13 258);
-  /* machine authorship — marks what an agent did rather than a human */
+  /* machine authorship: marks what an agent did rather than a human */
   --machine: oklch(0.505 0.17 296);
   --machine-soft: oklch(0.96 0.022 300);
   --machine-ink: oklch(0.43 0.15 296);
@@ -225,7 +225,7 @@
     letter-spacing: 0;
   }
 
-  /* Romanised Bangla is Latin script — it must not be forced into a Bengali face. */
+  /* Romanised Bangla is Latin script: it must not be forced into a Bengali face. */
   [data-script="bengali"] :is(sup, sub) {
     line-height: 0;
   }

@@ -14,6 +14,7 @@ import {
   conversations,
   formatBDT,
   type Guardrail,
+  type Language,
   type Order,
   type Product,
 } from "@/lib/data";
@@ -28,22 +29,24 @@ export type ConsoleResult =
   | { kind: "low"; items: Product[] }
   | { kind: "thread"; name: string; intent: string; id: string }
   | { kind: "rule"; rule: Guardrail }
+  | { kind: "assistant"; change: "tone" | "language" | "brief"; value: string }
   | { kind: "unsure"; heard: string };
 
-export interface ConsoleTurn {
-  id: number;
-  asked: string;
-  result: ConsoleResult;
-}
-
 /** Things she can type, shown as chips so she never has to guess the syntax. */
-export const examples = [
-  "where is Rehana's order",
-  "how much did I sell today",
-  "what is running low",
-  "Chaya kurti 20 pieces left",
-  "add nokshi kurti 1450 taka 12 pieces",
-  "never refund more than 3000 taka",
+export const examples: { text: string; language?: Language }[] = [
+  { text: "Rehana r order kothay?", language: "banglish" },
+  { text: "koto taka pelam aj?", language: "banglish" },
+  { text: "Chaya kurti 20 pieces left" },
+  { text: "add nokshi kurti 1450 taka 12 pieces" },
+  { text: "assistant should always mention the delivery charge" },
+  { text: "never refund more than 3000 taka" },
+];
+
+/** What the simulated microphone hears, in the order it hears it. */
+export const voiceLines = [
+  "Chaya kurti koyta ache?",
+  "Rehana r order kothay?",
+  "koto taka pelam aj?",
 ];
 
 const digits = (s: string) => s.replace(/[^0-9]/g, "");
@@ -95,9 +98,43 @@ export function interpret(input: string, ctx: ConsoleContext): ConsoleResult {
   const text = input.trim();
   const low = text.toLowerCase();
 
+  // Teaching the assistant: how to sound, what language, or a thing to remember.
+  if (/\b(assistant|agent|bot)\b/.test(low) || /^(tell it|teach it|make it)\b/.test(low)) {
+    const tone = low.match(
+      /sound\s+(?:more\s+|a bit\s+)?(formal|professional|serious|warm|friendly|personal|short|quick|brief)/
+    );
+    if (tone) {
+      const t = tone[1];
+      const value =
+        t === "formal" || t === "professional" || t === "serious"
+          ? "straight and professional"
+          : t === "short" || t === "quick" || t === "brief"
+            ? "short and quick"
+            : "warm and personal";
+      return { kind: "assistant", change: "tone", value };
+    }
+    const lang = low.match(
+      /\b(?:reply|answer|write|speak)\s+(?:only\s+)?in\s+(english|bangla|banglish)\b/
+    );
+    if (lang) {
+      return {
+        kind: "assistant",
+        change: "language",
+        value: lang[1][0].toUpperCase() + lang[1].slice(1),
+      };
+    }
+    const note = text
+      .replace(/^(tell|teach|make)\s+(the\s+)?(assistant|agent|bot|it)\s+(to\s+|that\s+)?/i, "")
+      .replace(/^(the\s+)?(assistant|agent|bot|it)\s+(should|must|will|needs to|has to)\s+/i, "")
+      .trim();
+    if (note && note !== text) {
+      return { kind: "assistant", change: "brief", value: note };
+    }
+  }
+
   // Money.
   if (/(sold|sell|sale|revenue|taka|income|koto.*(bikri|taka))/.test(low) &&
-      /(today|aaj|day|month)/.test(low)) {
+      /(today|aaj|\baj\b|day|month|pelam)/.test(low)) {
     const paid = ctx.orders.filter((o) => o.paymentState === "settled");
     const held = ctx.orders.filter((o) => o.paymentState === "collected");
     return {
@@ -235,6 +272,8 @@ export function summarise(r: ConsoleResult): string {
       return "No order yet";
     case "rule":
       return "New rule added";
+    case "assistant":
+      return "Your assistant updated";
     case "unsure":
       return "Not sure what you meant";
   }
