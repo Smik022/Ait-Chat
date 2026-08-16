@@ -68,31 +68,40 @@ function SidebarBody({
 
   return (
     <div className="flex h-full flex-col">
+      {/* The toggle keeps the same spot in both states, so the cursor never
+          has to chase it. Only the icon flips. */}
       <div
         className={cn(
           "flex h-14 shrink-0 items-center border-b",
-          collapsed ? "justify-center" : "gap-2.5 px-4"
+          collapsed ? "justify-center" : onToggle ? "gap-2 px-3" : "gap-2.5 px-4"
         )}
       >
-        <LogoMark className="size-7 rounded-md" />
-        {!collapsed ? (
-          <div className="min-w-0 flex-1 leading-tight">
-            <div className="truncate text-sm font-semibold tracking-tight">Ait-Chat</div>
-            <div className="truncate text-[11px] text-muted-foreground">
-              Social Commerce OS
-            </div>
-          </div>
-        ) : null}
-        {!collapsed && onToggle ? (
+        {onToggle ? (
           <button
             type="button"
             onClick={onToggle}
-            aria-label="Tuck the sidebar away"
-            title="Tuck the sidebar away"
-            className="shrink-0 rounded p-1 text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
+            aria-label={collapsed ? "Open the sidebar out" : "Tuck the sidebar away"}
+            aria-expanded={!collapsed}
+            title={collapsed ? "Open the sidebar out" : "Tuck the sidebar away"}
+            className="shrink-0 rounded-md p-2 text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
           >
-            <PanelLeftClose className="size-4" />
+            {collapsed ? (
+              <PanelLeftOpen className="size-4" />
+            ) : (
+              <PanelLeftClose className="size-4" />
+            )}
           </button>
+        ) : null}
+        {!collapsed ? (
+          <>
+            <LogoMark className="size-7 rounded-md" />
+            <div className="min-w-0 flex-1 leading-tight">
+              <div className="truncate text-sm font-semibold tracking-tight">Ait-Chat</div>
+              <div className="truncate text-[11px] text-muted-foreground">
+                Social Commerce OS
+              </div>
+            </div>
+          </>
         ) : null}
       </div>
 
@@ -173,20 +182,6 @@ function SidebarBody({
           </div>
         ))}
       </nav>
-
-      {collapsed && onToggle ? (
-        <div className="border-t p-2">
-          <button
-            type="button"
-            onClick={onToggle}
-            aria-label="Open the sidebar out"
-            title="Open the sidebar out"
-            className="flex w-full items-center justify-center rounded-md p-2 text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
-          >
-            <PanelLeftOpen className="size-4" />
-          </button>
-        </div>
-      ) : null}
 
       {!collapsed ? (
         <div className="border-t p-3">
