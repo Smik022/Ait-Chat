@@ -72,60 +72,35 @@ function LiveActivity() {
           </Link>
         }
       />
-      <div className="max-h-[26rem] overflow-auto">
-        <table className="w-full text-left text-[13px]">
-          <thead className="sticky top-0 z-10 bg-card">
-            <tr className="border-b text-[11px] text-muted-foreground">
-              <th className="px-4 py-2 font-medium">Time</th>
-              <th className="px-2 py-2 font-medium">Action</th>
-              <th className="px-2 py-2 font-medium">Agent</th>
-              <th className="px-2 py-2 font-medium">Result</th>
-              <th className="hidden px-2 py-2 font-medium md:table-cell">Detail</th>
-              <th className="px-4 py-2 text-right font-medium">Latency</th>
-            </tr>
-          </thead>
-          <tbody>
-            {events.slice(0, 14).map((e) => (
-              <tr
-                key={e.id}
-                className={cn(
-                  "border-b last:border-0 align-middle",
-                  mounted && live && e.id === newestId && "animate-row-in"
-                )}
-              >
-                <td className="px-4 py-2 font-mono text-[11px] text-muted-foreground tabular-nums">
-                  {e.time}
-                </td>
-                <td className="px-2 py-2 font-medium">{actionLabel(e.tool)}</td>
-                <td className="px-2 py-2">
-                  <AgentBadge agent={e.agent} />
-                </td>
-                <td className="px-2 py-2">
-                  <div className="flex items-center gap-1.5">
-                    <OutcomeChip outcome={e.outcome} />
-                    {e.policy ? (
-                      <Mono className="text-[11px] text-muted-foreground">
-                        {e.policy}
-                      </Mono>
-                    ) : null}
-                  </div>
-                </td>
-                <td className="hidden max-w-[22rem] truncate px-2 py-2 text-muted-foreground md:table-cell">
-                  {e.detail}
-                </td>
-                <td
-                  className={cn(
-                    "px-4 py-2 text-right font-mono text-[11px] tabular-nums",
-                    e.latencyMs > 3000 ? "text-pend-ink" : "text-muted-foreground"
-                  )}
-                >
-                  {e.latencyMs}ms
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <ul className="max-h-[26rem] overflow-auto">
+        {events.slice(0, 14).map((e) => (
+          <li
+            key={e.id}
+            className={cn(
+              "border-b px-4 py-2.5 last:border-0",
+              mounted && live && e.id === newestId && "animate-row-in"
+            )}
+          >
+            <div className="flex items-center gap-2">
+              <span className="shrink-0 font-mono text-[10px] text-muted-foreground tabular-nums">
+                {e.time}
+              </span>
+              <span className="truncate text-[13px] font-medium">
+                {actionLabel(e.tool)}
+              </span>
+              <span className="ml-auto shrink-0">
+                <OutcomeChip outcome={e.outcome} />
+              </span>
+            </div>
+            <div className="mt-0.5 flex items-center gap-2 pl-[2.85rem]">
+              <AgentBadge agent={e.agent} />
+              <span className="min-w-0 truncate text-[11px] text-muted-foreground">
+                {e.detail}
+              </span>
+            </div>
+          </li>
+        ))}
+      </ul>
     </Panel>
   );
 }
@@ -233,7 +208,7 @@ function NeedsAPerson() {
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {formatBDT(refund.amount)} · {refund.customer} · under the ৳3,000
-                  ceiling, outside Support&rsquo;s scope
+                  ceiling, outside the Assistant&rsquo;s scope
                 </p>
               </div>
             </div>

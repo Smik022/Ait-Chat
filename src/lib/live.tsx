@@ -34,22 +34,22 @@ type ScriptedEvent = {
  * the blocked call is the point of the whole gateway, not an edge case.
  */
 const SCRIPT: ScriptedEvent[] = [
-  { tool: "classify_intent", agent: "router", outcome: "allowed", detail: "price-inquiry · 0.94 · banglish", latencyMs: 170 },
-  { tool: "check_inventory", agent: "sales", outcome: "allowed", detail: "Chaya Cotton Kurti · 42 left", latencyMs: 290 },
-  { tool: "apply_discount", agent: "sales", outcome: "blocked", detail: "15% requested · ceiling is 10% · routed to Manager", latencyMs: 7, policy: "P-01" },
-  { tool: "search_knowledge_base", agent: "support", outcome: "allowed", detail: "COD return window → 3 chunks · top 0.97", latencyMs: 215 },
-  { tool: "create_payment_link", agent: "sales", outcome: "allowed", detail: "Draft order · ৳1,290 · link issued", latencyMs: 620, revenue: 1290, order: true },
-  { tool: "get_order_status", agent: "support", outcome: "allowed", detail: "ORD-9317 → shipped · Pathao BD00182917", latencyMs: 360 },
-  { tool: "recover_cart", agent: "retention", outcome: "blocked", detail: "24h window closed 4m ago · send suppressed", latencyMs: 5, policy: "P-05" },
+  { tool: "classify_intent", agent: "assistant", outcome: "allowed", detail: "price-inquiry · 0.94 · banglish", latencyMs: 170 },
+  { tool: "check_inventory", agent: "assistant", outcome: "allowed", detail: "Chaya Cotton Kurti · 42 left", latencyMs: 290 },
+  { tool: "apply_discount", agent: "assistant", outcome: "blocked", detail: "15% requested · ceiling is 10% · routed to Manager", latencyMs: 7, policy: "P-01" },
+  { tool: "search_knowledge_base", agent: "assistant", outcome: "allowed", detail: "COD return window → 3 chunks · top 0.97", latencyMs: 215 },
+  { tool: "create_payment_link", agent: "assistant", outcome: "allowed", detail: "Draft order · ৳1,290 · link issued", latencyMs: 620, revenue: 1290, order: true },
+  { tool: "get_order_status", agent: "assistant", outcome: "allowed", detail: "ORD-9317 → shipped · Pathao BD00182917", latencyMs: 360 },
+  { tool: "recover_cart", agent: "assistant", outcome: "blocked", detail: "24h window closed 4m ago · send suppressed", latencyMs: 5, policy: "P-05" },
   { tool: "approve_discount", agent: "manager", outcome: "approved", detail: "10% approved on draft · within ceiling after review", latencyMs: 880, policy: "P-01" },
-  { tool: "detect_language", agent: "router", outcome: "allowed", detail: "bangla · 0.97 · Bengali script", latencyMs: 55 },
-  { tool: "check_logistics", agent: "operations", outcome: "fallback", detail: "Steadfast 3.2s · static ETA sent, thread flagged", latencyMs: 3180, policy: "P-06" },
-  { tool: "search_products", agent: "sales", outcome: "allowed", detail: "saree · cream → 4 matches", latencyMs: 250 },
-  { tool: "create_payment_link", agent: "sales", outcome: "allowed", detail: "Draft order · ৳2,190 · link issued", latencyMs: 590, revenue: 2190, order: true },
+  { tool: "detect_language", agent: "assistant", outcome: "allowed", detail: "bangla · 0.97 · Bengali script", latencyMs: 55 },
+  { tool: "check_logistics", agent: "assistant", outcome: "fallback", detail: "Steadfast 3.2s · static ETA sent, thread flagged", latencyMs: 3180, policy: "P-06" },
+  { tool: "search_products", agent: "assistant", outcome: "allowed", detail: "saree · cream → 4 matches", latencyMs: 250 },
+  { tool: "create_payment_link", agent: "assistant", outcome: "allowed", detail: "Draft order · ৳2,190 · link issued", latencyMs: 590, revenue: 2190, order: true },
   { tool: "handoff_to_human", agent: "manager", outcome: "allowed", detail: "CV-218 → Ayesha Karim · context attached", latencyMs: 195, conversationId: "CV-218" },
-  { tool: "score_sentiment", agent: "router", outcome: "allowed", detail: "negative · 0.81 · escalation armed", latencyMs: 130 },
-  { tool: "issue_refund", agent: "support", outcome: "blocked", detail: "Support cannot refund. Sent to the Manager.", latencyMs: 9, policy: "P-02" },
-  { tool: "sync_inventory", agent: "operations", outcome: "allowed", detail: "P-1410 → 40 units received", latencyMs: 1080 },
+  { tool: "score_sentiment", agent: "assistant", outcome: "allowed", detail: "negative · 0.81 · escalation armed", latencyMs: 130 },
+  { tool: "issue_refund", agent: "assistant", outcome: "blocked", detail: "The Assistant cannot refund. Sent to the Manager.", latencyMs: 9, policy: "P-02" },
+  { tool: "sync_inventory", agent: "assistant", outcome: "allowed", detail: "P-1410 → 40 units received", latencyMs: 1080 },
 ];
 
 /** Advances a HH:MM:SS clock string by a number of seconds. */

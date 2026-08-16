@@ -251,13 +251,13 @@ const SURFACE_METRICS = [
 ];
 
 const SURFACE_ROWS = [
-  { time: "10:41:22", action: "Check an order", agent: "SU", outcome: "allowed", detail: "ORD-9316 → shipped · Pathao BD00182909", ms: "380ms" },
-  { time: "10:41:05", action: "Look up a product", agent: "SA", outcome: "allowed", detail: "kurti under ৳1,600 → 3 matches", ms: "240ms" },
-  { time: "10:40:58", action: "Give a discount", agent: "SA", outcome: "blocked", detail: "15% asked for · your limit is 10% · sent to you", ms: "8ms" },
-  { time: "10:40:41", action: "Send a checkout link", agent: "SA", outcome: "allowed", detail: "৳3,890 · link sent", ms: "640ms" },
+  { time: "10:41:22", action: "Check an order", agent: "AS", outcome: "allowed", detail: "ORD-9316 → shipped · Pathao BD00182909", ms: "380ms" },
+  { time: "10:41:05", action: "Look up a product", agent: "AS", outcome: "allowed", detail: "kurti under ৳1,600 → 3 matches", ms: "240ms" },
+  { time: "10:40:58", action: "Give a discount", agent: "AS", outcome: "blocked", detail: "15% asked for · your limit is 10% · sent to you", ms: "8ms" },
+  { time: "10:40:41", action: "Send a checkout link", agent: "AS", outcome: "allowed", detail: "৳3,890 · link sent", ms: "640ms" },
   { time: "10:40:30", action: "Refund an order", agent: "MG", outcome: "approved", detail: "ORD-9310 · ৳2,450 · you approved it", ms: "940ms" },
-  { time: "10:40:12", action: "Sync stock", agent: "OP", outcome: "allowed", detail: "Silk Dupatta → 40 units back in", ms: "1120ms" },
-  { time: "10:39:58", action: "Check an order", agent: "SU", outcome: "fallback", detail: "Courier slow · sent what we knew, flagged it", ms: "3210ms" },
+  { time: "10:40:12", action: "Sync stock", agent: "AS", outcome: "allowed", detail: "Silk Dupatta → 40 units back in", ms: "1120ms" },
+  { time: "10:39:58", action: "Check an order", agent: "AS", outcome: "fallback", detail: "Courier slow · sent what we knew, flagged it", ms: "3210ms" },
 ];
 
 const outcomeTone: Record<string, string> = {
@@ -269,10 +269,10 @@ const outcomeTone: Record<string, string> = {
 
 /** Activity that lands while you are looking at the page. */
 const INCOMING_ROWS = [
-  { time: "10:41:38", action: "Check stock", agent: "SA", outcome: "allowed", detail: "Chaya Cotton Kurti · 42 left", ms: "290ms" },
-  { time: "10:41:52", action: "Read what they want", agent: "RT", outcome: "allowed", detail: "price question · Banglish · 0.94", ms: "170ms" },
-  { time: "10:42:07", action: "Give a discount", agent: "SA", outcome: "blocked", detail: "12% asked for · your limit is 10% · sent to you", ms: "7ms" },
-  { time: "10:42:19", action: "Send a checkout link", agent: "SA", outcome: "allowed", detail: "৳1,290 · link sent", ms: "610ms" },
+  { time: "10:41:38", action: "Check stock", agent: "AS", outcome: "allowed", detail: "Chaya Cotton Kurti · 42 left", ms: "290ms" },
+  { time: "10:41:52", action: "Read what they want", agent: "AS", outcome: "allowed", detail: "price question · Banglish · 0.94", ms: "170ms" },
+  { time: "10:42:07", action: "Give a discount", agent: "AS", outcome: "blocked", detail: "12% asked for · your limit is 10% · sent to you", ms: "7ms" },
+  { time: "10:42:19", action: "Send a checkout link", agent: "AS", outcome: "allowed", detail: "৳1,290 · link sent", ms: "610ms" },
   { time: "10:42:34", action: "Hand over to a person", agent: "MG", outcome: "allowed", detail: "customer asked for a human · Ayesha took it", ms: "190ms" },
 ];
 
@@ -503,7 +503,7 @@ function CommentToOrder() {
         )}
       >
         <div className="text-xs font-medium text-muted-foreground">
-          Router reads it
+          Assistant reads it
         </div>
         <dl className="mt-4 space-y-2.5 text-xs">
           <div className="flex items-center justify-between gap-2">
@@ -519,8 +519,8 @@ function CommentToOrder() {
             <dd className="font-mono font-medium tabular-nums">0.97</dd>
           </div>
           <div className="flex items-center justify-between gap-2 border-t pt-2.5">
-            <dt className="text-muted-foreground">Routed to</dt>
-            <dd className="font-medium">Sales</dd>
+            <dt className="text-muted-foreground">Handled by</dt>
+            <dd className="font-medium">Assistant</dd>
           </div>
         </dl>
       </div>
@@ -630,7 +630,7 @@ export default function Home() {
                   <span className="text-muted-foreground"> Staff them.</span>
                 </h1>
                 <p className="mt-6 max-w-lg text-lg leading-relaxed text-muted-foreground text-pretty">
-                  An agent workforce that answers every comment and DM across Instagram,
+                  One AI assistant that answers every comment and DM across Instagram,
                   Messenger and WhatsApp. It quotes real stock, takes the order, and
                   stops dead when it should not decide alone.
                 </p>
@@ -733,7 +733,7 @@ export default function Home() {
             <div className="overflow-hidden rounded-xl border bg-card">
               <div className="border-b px-4 py-3">
                 <div className="text-sm font-medium">
-                  The Sales agent wants to give a discount
+                  The assistant wants to give a discount
                 </div>
                 <div className="mt-0.5 text-xs text-muted-foreground">
                   Chaya Cotton Kurti · customer pushed back on price
@@ -752,7 +752,7 @@ export default function Home() {
               <ul className="divide-y">
                 {[
                   { label: "Is this a real action?", detail: "yes", ok: true },
-                  { label: "Is Sales allowed to do it?", detail: "yes", ok: true },
+                  { label: "Is the assistant allowed to do it?", detail: "yes", ok: true },
                   { label: "Is it within your limits?", detail: "no, 15% is over 10%", ok: false },
                 ].map((s) => (
                   <li
@@ -838,7 +838,7 @@ export default function Home() {
                   {m.from === "agent" ? (
                     <div className="mb-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
                       <StatusDot className="bg-machine" />
-                      Support agent
+                      Assistant
                     </div>
                   ) : null}
                   <p
@@ -890,7 +890,7 @@ export default function Home() {
             <dl className="mt-12 grid grid-cols-2 gap-x-6 gap-y-8 border-t pt-10 sm:grid-cols-4">
               {[
                 { k: "Channels", v: "4", n: "Instagram, Messenger, WhatsApp, web" },
-                { k: "Agents", v: String(agents.length), n: "one router, five specialists" },
+                { k: "Agents", v: String(agents.length), n: "one assistant, one approver" },
                 { k: "Languages", v: "3", n: "Banglish, Bangla, English" },
                 { k: "Attributed in 8 days", v: formatBDTScale(total), n: "illustrative" },
               ].map((s) => (

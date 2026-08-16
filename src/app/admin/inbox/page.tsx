@@ -359,7 +359,7 @@ function ContextRail({ conversation }: { conversation: Conversation }) {
   const order = conversation.orderId
     ? orders.find((o) => o.id === conversation.orderId)
     : undefined;
-  const routerAgent = agentById("router");
+  const assistantAgent = agentById("assistant");
 
   return (
     <div className="space-y-4">
@@ -401,7 +401,7 @@ function ContextRail({ conversation }: { conversation: Conversation }) {
         <div className="border-b px-4 py-2.5">
           <h3 className="text-[13px] font-medium">How it was classified</h3>
           <p className="mt-0.5 text-[11px] text-muted-foreground">
-            {routerAgent.name} scored this before any specialist saw it.
+            {assistantAgent.name} scored this before writing back.
           </p>
         </div>
         <div className="space-y-2.5 px-4 py-3">

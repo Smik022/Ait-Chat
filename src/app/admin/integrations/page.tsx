@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { AlertTriangle, Plus } from "lucide-react";
+import { AlertTriangle, Check, Plus } from "lucide-react";
 
 import { integrations, type Integration } from "@/lib/data";
 import { BrandMark } from "@/components/brand-logos";
@@ -9,7 +9,6 @@ import {
   Chip,
   Metric,
   MetricRow,
-  Mono,
   PageHeader,
   Panel,
   PanelHeader,
@@ -34,6 +33,18 @@ const statusMeta = {
   attention: { label: "Needs attention", tone: "bg-pend-soft text-pend-ink", dot: "bg-pend" },
   available: { label: "Not connected", tone: "bg-muted text-muted-foreground", dot: "bg-muted-foreground" },
 } as const;
+
+/** The permission tokens, said the way a shop owner would. */
+const scopePlain: Record<string, string> = {
+  instagram_manage_messages: "Read and send direct messages",
+  instagram_manage_comments: "Reply to comments",
+  pages_messaging: "Read and send messages on the page",
+  pages_read_engagement: "Read page activity and comments",
+  whatsapp_business_messaging: "Read and send WhatsApp messages",
+  whatsapp_business_management: "Manage the WhatsApp business profile",
+  "orders.read": "Read orders",
+  "orders.write": "Create and update orders",
+};
 
 function IntegrationRow({ item }: { item: Integration }) {
   const meta = statusMeta[item.status];
@@ -88,20 +99,18 @@ function IntegrationRow({ item }: { item: Integration }) {
           {item.scopes.length ? (
             <>
               <h4 className="text-[11px] font-medium text-muted-foreground">
-                Permissions granted
+                What it can do
               </h4>
-              <div className="mt-1.5 flex flex-wrap gap-1.5">
+              <ul className="mt-1.5 space-y-1">
                 {item.scopes.map((s) => (
-                  <Mono
-                    key={s}
-                    className="rounded border bg-card px-1.5 py-0.5 text-[11px]"
-                  >
-                    {s}
-                  </Mono>
+                  <li key={s} className="flex items-center gap-2 text-[12px]">
+                    <Check className="size-3 shrink-0 text-live" strokeWidth={3} />
+                    {scopePlain[s] ?? s}
+                  </li>
                 ))}
-              </div>
+              </ul>
               <p className="mt-2 text-[11px] text-muted-foreground">
-                Least privilege: only what the agents actually need to do their job.
+                Only what it needs to do its job. Nothing extra.
               </p>
             </>
           ) : (

@@ -8,13 +8,7 @@
 
 export type Channel = "instagram" | "facebook" | "whatsapp" | "web";
 
-export type AgentRole =
-  | "router"
-  | "sales"
-  | "support"
-  | "retention"
-  | "operations"
-  | "manager";
+export type AgentRole = "assistant" | "manager";
 
 export type Language = "banglish" | "bangla" | "english";
 
@@ -99,7 +93,7 @@ export const languagePolicies = [
 /* --------------------------------- Agents -------------------------------- */
 
 export interface AgentDef {
-  id: AgentRole;
+  id: string;
   name: string;
   title: string;
   focus: string;
@@ -113,135 +107,71 @@ export interface AgentDef {
   tone: string;
   languagePolicy: string;
   systemPrompt: string;
+  /** The Facebook page this agent answers, if connected. */
+  page?: string;
 }
 
 export const agents: AgentDef[] = [
   {
-    id: "router",
-    name: "Router",
-    title: "Intent & language classifier",
+    id: "assistant",
+    name: "Assistant",
+    title: "The whole shop, front to back",
     focus:
-      "Reads every inbound message, scores intent, language and sentiment, then assigns the specialist.",
-    escalation: "Unknown intent, or classification confidence under 0.60.",
+      "Reads every inbound message, quotes real stock and prices, takes the order, answers order and policy questions, recovers carts, and knows exactly when to stop and get a person.",
+    escalation:
+      "Anything your rules hold for approval, a refund of any size, or a customer who asks for a person.",
     status: "online",
-    tools: ["classify_intent", "detect_language", "score_sentiment"],
-    handlesNow: 0,
-    kpis: { resolved: 4821, containment: 100, avgResponse: "0.2s", handoffs: 214 },
-    initials: "RT",
-    tone: "brief",
-    languagePolicy: "mirror",
-    systemPrompt: `You classify inbound messages. You never reply to a customer yourself.
-
-For every message return four things: intent, language, sentiment, and a confidence score for each.
-
-Bangla written in Roman letters is Banglish. Classify it directly. Do not translate it to English first, because translation flattens exactly the cues sentiment depends on.
-
-Banglish spelling is not standardised. "ache", "ase" and "asey" are the same word, and one person will use two of them in the same thread. Treat them as equivalent.
-
-If your confidence in the intent is below 0.60, route to a person instead of guessing. A slow answer costs less than a wrong one.`,
-  },
-  {
-    id: "sales",
-    name: "Sales",
-    title: "Discovery & checkout",
-    focus:
-      "Answers product, sizing and stock questions, then moves the thread to a checkout link.",
-    escalation: "Discount requested above the 10% ceiling.",
-    status: "busy",
-    tools: ["search_products", "check_inventory", "create_payment_link", "apply_discount"],
-    handlesNow: 12,
-    kpis: { resolved: 1894, containment: 88.2, avgResponse: "1.4s", handoffs: 96 },
-    initials: "SA",
+    tools: [
+      "search_products",
+      "check_inventory",
+      "get_order_status",
+      "search_knowledge_base",
+      "check_return_eligibility",
+      "create_payment_link",
+      "apply_discount",
+      "recover_cart",
+      "send_restock_alert",
+      "sync_inventory",
+      "update_crm_contact",
+      "handoff_to_human",
+    ],
+    handlesNow: 24,
+    kpis: { resolved: 9747, containment: 84.9, avgResponse: "1.2s", handoffs: 288 },
+    initials: "AS",
     tone: "warm",
     languagePolicy: "mirror",
-    systemPrompt: `You sell for Athelier. The person you are talking to found us through a comment or a DM, not a shop.
+    page: "pg-1",
+    systemPrompt: `You run the shop for Athelier. You are the whole team: you read what people want, answer product, price, sizing and order questions, take the order, and hand off anything that needs a person. You speak for the owner, so you never invent a fact.
 
 Quote only stock and prices that came back from a real check. Never state availability from memory. A wrong "yes, we have it" costs the order and the trust.
 
-Answer the question they asked, then offer one next step. One question at a time; this is a conversation, not a form.
+Bangla written in Roman letters is Banglish. Classify it directly, do not translate it first, because translation flattens exactly the cues sentiment depends on. Banglish spelling is not standardised: "ache", "ase" and "asey" are the same word, and one person will use two of them in the same thread. Treat them as equivalent.
 
-You may apply a discount up to 10%. Above that you cannot. Say so plainly and pass it to the Manager rather than hinting it might be possible.
+Policy answers come from the knowledge base and must be cited. If it does not cover something, say you will check rather than inventing a policy that sounds reasonable.
+
+You may apply a discount up to 10%. Above that you cannot, and you say so plainly rather than hinting it might be possible.
+
+You cannot issue refunds or approve exceptions. When one is clearly warranted, pass it for approval and say roughly how long that takes. Do not imply it is already approved.
+
+If a customer asks for a person, pass it on immediately. Do not try one more answer first.
 
 Write back in whatever they wrote in. If they write Banglish, write Banglish.`,
   },
   {
-    id: "support",
-    name: "Support",
-    title: "Order care",
-    focus:
-      "Tracks orders against live courier data and answers policy questions from the knowledge base.",
-    escalation: "Parcel missing, or a policy exception is requested.",
-    status: "online",
-    tools: ["get_order_status", "search_knowledge_base", "check_return_eligibility"],
-    handlesNow: 9,
-    kpis: { resolved: 2231, containment: 84.6, avgResponse: "1.1s", handoffs: 143 },
-    initials: "SU",
-    tone: "professional",
-    languagePolicy: "mirror",
-    systemPrompt: `You look after orders that already exist.
-
-Status and tracking always come from a live lookup. Never answer "it should arrive tomorrow" from memory or inference. Read it, then say it.
-
-Policy answers come from the knowledge base and must be cited. If the knowledge base does not cover something, say you will check rather than inventing a policy that sounds reasonable.
-
-You cannot issue refunds. When one is clearly warranted, say plainly that you are passing it for approval and roughly how long that takes. Do not imply it is already approved.`,
-  },
-  {
-    id: "retention",
-    name: "Retention",
-    title: "Recovery & re-engagement",
-    focus:
-      "Recovers abandoned carts and sends restock alerts, strictly inside the messaging window.",
-    escalation: "Opt-out requested, or the messaging window has closed.",
-    status: "idle",
-    tools: ["recover_cart", "send_restock_alert", "create_offer"],
-    handlesNow: 3,
-    kpis: { resolved: 642, containment: 79.1, avgResponse: "2.0s", handoffs: 38 },
-    initials: "RE",
-    tone: "warm",
-    languagePolicy: "mirror",
-    systemPrompt: `You re-engage people who left something behind.
-
-Before you compose anything, confirm the messaging window is open. If it is closed there is nothing to write. Stop there rather than drafting a message that cannot be sent.
-
-Send one. Do not chase. If they do not reply, that is an answer.
-
-If anyone asks to stop hearing from us, stop immediately and confirm that you have. Never negotiate an opt-out.`,
-  },
-  {
-    id: "operations",
-    name: "Operations",
-    title: "Catalogue & stock",
-    focus: "Keeps the catalogue accurate, counts stock down as orders go out, and flags what is running low.",
-    escalation: "Stock looks wrong, or a courier stops responding.",
-    status: "online",
-    tools: ["sync_inventory", "update_crm_contact", "check_logistics"],
-    handlesNow: 0,
-    kpis: { resolved: 960, containment: 96.4, avgResponse: "0.9s", handoffs: 11 },
-    initials: "OP",
-    tone: "brief",
-    languagePolicy: "english",
-    systemPrompt: `You keep the catalogue honest. You do not talk to customers.
-
-Count stock down as orders go out and put it back when one is returned. Flag anything running low early, while there is still time to restock.
-
-Never invent a product detail. If a size, colour or material was not entered by the shop owner, say it is unknown and ask her rather than filling the gap. She is the one answering for it if a customer is told something wrong.`,
-  },
-  {
     id: "manager",
     name: "Manager",
-    title: "Approvals & escalation",
+    title: "Approvals only",
     focus:
-      "Reviews anything a specialist is not permitted to do alone, then approves it or passes it to a person.",
-    escalation: "Refund over ৳3,000, or the customer asks for a human.",
+      "Reviews anything the Assistant is not permitted to do alone, then approves it or passes it to a person. It never talks to a customer.",
+    escalation: "It is the last gate before a person.",
     status: "online",
-    tools: ["approve_discount", "issue_refund", "approve_exception", "handoff_to_human"],
+    tools: ["issue_refund", "approve_exception", "handoff_to_human"],
     handlesNow: 2,
     kpis: { resolved: 214, containment: 61.3, avgResponse: "3.4s", handoffs: 214 },
     initials: "MG",
     tone: "firm",
     languagePolicy: "mirror",
-    systemPrompt: `You decide the things a specialist is not permitted to decide alone.
+    systemPrompt: `You decide the things the Assistant is not permitted to decide alone.
 
 Approve only what merchant policy allows. Platform rules like messaging windows, template categories and consent are never yours to waive, and you should say so plainly when someone asks you to.
 
@@ -258,6 +188,26 @@ export const humanTeam = [
   { id: "h2", name: "Tanvir Hossain", role: "Operations", initials: "TH", online: true },
   { id: "h3", name: "Rumana Akter", role: "Helps at weekends", initials: "RA", online: false },
 ];
+
+/* --------------------------------- Pages --------------------------------- */
+
+export interface FacebookPage {
+  id: string;
+  name: string;
+  handle: string;
+  followers: string;
+}
+
+/**
+ * The pages an agent can be connected to. Page-only sellers do not have a
+ * website, so the page is where the whole shop happens; an agent answers one.
+ */
+export const facebookPages: FacebookPage[] = [
+  { id: "pg-1", name: "Athelier", handle: "facebook.com/athelier", followers: "12.4K" },
+  { id: "pg-2", name: "Athelier Daily Deals", handle: "facebook.com/atheldeals", followers: "3.1K" },
+];
+
+export const pageById = (id: string) => facebookPages.find((p) => p.id === id);
 
 /* -------------------------------- Products ------------------------------- */
 
@@ -391,7 +341,7 @@ export interface Order {
 export const orders: Order[] = [
   {
     id: "ORD-9317", address: "House 42, Road 8, Block C, Bashundhara R/A, Dhaka-1229", area: "Bashundhara", confirmedByCall: true, customer: "Rafiul Islam", phone: "01711-224500", sku: "P-1042",
-    product: "Chaya Cotton Kurti", qty: 2, amount: 2580, channel: "whatsapp", agent: "sales",
+    product: "Chaya Cotton Kurti", qty: 2, amount: 2580, channel: "whatsapp", agent: "assistant",
     status: "shipped", placed: "09 Aug", eta: "14 Aug", tracking: "BD00182917", courier: "Pathao",
     zone: "Dhaka Metro", payment: "bKash", paymentState: "settled", conversationId: "CV-220",
     timeline: [
@@ -404,7 +354,7 @@ export const orders: Order[] = [
   },
   {
     id: "ORD-9316", address: "Flat 5B, House 11, Road 4, Dhanmondi, Dhaka-1209", area: "Dhanmondi", confirmedByCall: true, customer: "Tasnim Rahman", phone: "01818-993210", sku: "P-1207",
-    product: "Dhakai Jamdani Saree", qty: 1, amount: 3890, channel: "instagram", agent: "sales",
+    product: "Dhakai Jamdani Saree", qty: 1, amount: 3890, channel: "instagram", agent: "assistant",
     status: "processing", placed: "10 Aug", eta: "15 Aug", tracking: "BD00182909", courier: "Pathao",
     zone: "Dhaka Metro", payment: "Nagad", paymentState: "settled", conversationId: "CV-221",
     timeline: [
@@ -416,7 +366,7 @@ export const orders: Order[] = [
   },
   {
     id: "ORD-9315", address: "Ward 5, Boalia, Rajshahi-6000", area: "Rajshahi", confirmedByCall: true, customer: "Nusrat Jahan", phone: "01677-120984", sku: "P-1212",
-    product: "Tangail Cotton Saree", qty: 1, amount: 2190, channel: "whatsapp", agent: "support",
+    product: "Tangail Cotton Saree", qty: 1, amount: 2190, channel: "whatsapp", agent: "assistant",
     status: "delivered", placed: "05 Aug", eta: "11 Aug", tracking: "BD00182902", courier: "Steadfast",
     zone: "Outside Dhaka", payment: "Cash on delivery", paymentState: "collected",
     timeline: [
@@ -429,7 +379,7 @@ export const orders: Order[] = [
   },
   {
     id: "ORD-9308", address: "Village: Baraigram, Post: Banpara, Natore", area: "Natore", confirmedByCall: false, customer: "Md. Sabbir Ahmed", phone: "01512-345673", sku: "P-1330",
-    product: "Leather Block-Heel Sandal", qty: 1, amount: 1980, channel: "facebook", agent: "retention",
+    product: "Leather Block-Heel Sandal", qty: 1, amount: 1980, channel: "facebook", agent: "assistant",
     status: "returned", placed: "02 Aug", eta: "n/a", tracking: "BD00182849", courier: "RedX",
     zone: "Outside Dhaka", payment: "Cash on delivery", paymentState: "uncollected",
     timeline: [
@@ -455,11 +405,11 @@ export const orders: Order[] = [
   },
   {
     id: "ORD-9313", address: "Holding 108, Ward 12, Kotwali, Chattogram-4000", area: "Chattogram", confirmedByCall: true, customer: "Mehedi Hasan", phone: "01521-447803", sku: "P-1388",
-    product: "Terracotta Earrings", qty: 3, amount: 1470, channel: "facebook", agent: "retention",
+    product: "Terracotta Earrings", qty: 3, amount: 1470, channel: "facebook", agent: "assistant",
     status: "shipped", placed: "08 Aug", eta: "13 Aug", tracking: "BD00182881", courier: "Pathao",
     zone: "Dhaka Metro", payment: "bKash", paymentState: "settled",
     timeline: [
-      { label: "Cart recovered by Retention", at: "08 Aug · 09:02", done: true, by: "agent" },
+      { label: "Cart recovered by the Assistant", at: "08 Aug · 09:02", done: true, by: "agent" },
       { label: "bKash received, screenshot checked", at: "08 Aug · 09:18", done: true, by: "system" },
       { label: "Handed to Pathao", at: "09 Aug · 15:00", done: true, by: "courier" },
       { label: "Out for delivery", at: "Expected 13 Aug", done: false, by: "courier" },
@@ -467,7 +417,7 @@ export const orders: Order[] = [
   },
   {
     id: "ORD-9312", address: "Mirpur 10 golchottor er pashe, hasan store er upore, Dhaka-1216", area: "Mirpur", confirmedByCall: false, customer: "Sadia Chowdhury", phone: "01733-880214", sku: "P-1410",
-    product: "Silk Dupatta", qty: 1, amount: 890, channel: "instagram", agent: "sales",
+    product: "Silk Dupatta", qty: 1, amount: 890, channel: "instagram", agent: "assistant",
     status: "confirmed", placed: "11 Aug", eta: "16 Aug", tracking: "Awaiting pickup", courier: "Pathao",
     zone: "Dhaka Metro", payment: "Cash on delivery", paymentState: "on-delivery", conversationId: "CV-215",
     timeline: [
@@ -478,7 +428,7 @@ export const orders: Order[] = [
   },
   {
     id: "ORD-9311", address: "Zindabazar, Sylhet-3100", area: "Sylhet", confirmedByCall: true, customer: "Farhan Kabir", phone: "01844-109876", sku: "P-1098",
-    product: "Nandini Embroidered Kurti", qty: 2, amount: 3180, channel: "facebook", agent: "sales",
+    product: "Nandini Embroidered Kurti", qty: 2, amount: 3180, channel: "facebook", agent: "assistant",
     status: "shipped", placed: "07 Aug", eta: "12 Aug", tracking: "BD00182870", courier: "RedX",
     zone: "Outside Dhaka", payment: "bKash", paymentState: "settled", conversationId: "CV-217",
     timeline: [
@@ -490,7 +440,7 @@ export const orders: Order[] = [
   },
   {
     id: "ORD-9310", address: "House 22, Road 2, Banani, Dhaka-1213", area: "Banani", confirmedByCall: true, customer: "Priya Dutta", phone: "01611-334455", sku: "P-1155",
-    product: "Milan Anarkali Gown", qty: 1, amount: 2450, channel: "whatsapp", agent: "support",
+    product: "Milan Anarkali Gown", qty: 1, amount: 2450, channel: "whatsapp", agent: "assistant",
     status: "returned", placed: "30 Jul", eta: "n/a", tracking: "BD00182863", courier: "Pathao",
     zone: "Dhaka Metro", payment: "bKash", paymentState: "refunded", conversationId: "CV-216",
     timeline: [
@@ -624,7 +574,7 @@ export const conversations: Conversation[] = [
     handle: "@rehana.s",
     initials: "RS",
     channel: "instagram",
-    agent: "sales",
+    agent: "assistant",
     intent: "Placing an order",
     sentiment: "positive",
     language: "banglish",
@@ -641,7 +591,7 @@ export const conversations: Conversation[] = [
         gloss: "Do you have the Chaya kurti in XL?", time: "11:02", language: "banglish",
       },
       {
-        id: "m2", author: "agent", agent: "sales",
+        id: "m2", author: "agent", agent: "assistant",
         text: "Ji apu, XL ache. ৳1,290, ar Dhaka te delivery ৳80. Nibe?",
         gloss: "Yes apu, XL is available. ৳1,290, and delivery in Dhaka is ৳80. Shall I take it?",
         time: "11:02", language: "banglish", confidence: 0.95, productRef: "P-1042",
@@ -663,7 +613,7 @@ export const conversations: Conversation[] = [
     handle: "@tasnim.r",
     initials: "TR",
     channel: "instagram",
-    agent: "sales",
+    agent: "assistant",
     intent: "Product inquiry",
     sentiment: "positive",
     language: "banglish",
@@ -681,7 +631,7 @@ export const conversations: Conversation[] = [
         language: "banglish", gloss: "What's the price of this saree?",
       },
       {
-        id: "m2", author: "agent", agent: "router", text: "Routed to Sales. Product inquiry, Banglish, positive.",
+        id: "m2", author: "agent", agent: "assistant", text: "Product inquiry, Banglish, positive. Confidence 0.91.",
         time: "14:02", confidence: 0.91,
         tools: [
           { id: "t1", tool: "classify_intent", args: { text: "Dam koto ei saree ta?" }, outcome: "allowed", detail: "product-inquiry · 0.91", latencyMs: 180 },
@@ -689,7 +639,7 @@ export const conversations: Conversation[] = [
         ],
       },
       {
-        id: "m3", author: "agent", agent: "sales",
+        id: "m3", author: "agent", agent: "assistant",
         text: "Dhakai Jamdani Saree ta ৳3,890. Regular ৳4,500 theke kome. Cream colour ta ekhono ache, 14 ta stock e. Apnar jonno ekta rekhe dibo?",
         gloss: "The Dhakai Jamdani Saree is ৳3,890, down from ৳4,500. The cream colour is still available, 14 in stock. Shall I hold one for you?",
         time: "14:02", language: "banglish", confidence: 0.93, productRef: "P-1207",
@@ -703,7 +653,7 @@ export const conversations: Conversation[] = [
         language: "banglish", gloss: "Yes hold it. How many days for delivery in Dhaka?",
       },
       {
-        id: "m5", author: "agent", agent: "sales",
+        id: "m5", author: "agent", agent: "assistant",
         text: "Dhaka Metro te 2–3 din. Ei nin apnar checkout link. COD o nite paren.",
         gloss: "2–3 days in Dhaka Metro. Here's your checkout link. You can also pay cash on delivery.",
         time: "14:05", language: "banglish", confidence: 0.96,
@@ -723,7 +673,7 @@ export const conversations: Conversation[] = [
     handle: "01711…4500",
     initials: "RI",
     channel: "whatsapp",
-    agent: "support",
+    agent: "assistant",
     intent: "Order tracking",
     sentiment: "neutral",
     language: "bangla",
@@ -741,7 +691,7 @@ export const conversations: Conversation[] = [
         gloss: "Where is my order?", time: "10:38", language: "bangla",
       },
       {
-        id: "m2", author: "agent", agent: "support",
+        id: "m2", author: "agent", agent: "assistant",
         text: "আপনার অর্ডার ORD-9317 পাঠাও তে আছে। ট্র্যাকিং BD00182917। ১৪ আগস্টের মধ্যে পৌঁছে যাবে।",
         script: "bengali",
         gloss: "Your order ORD-9317 is with Pathao, tracking BD00182917. It will arrive by 14 August.",
@@ -760,7 +710,7 @@ export const conversations: Conversation[] = [
     handle: "@nusrat.j",
     initials: "NJ",
     channel: "instagram",
-    agent: "retention",
+    agent: "assistant",
     intent: "Abandoned cart",
     sentiment: "positive",
     language: "english",
@@ -777,7 +727,7 @@ export const conversations: Conversation[] = [
         time: "09:50", language: "english",
       },
       {
-        id: "m2", author: "agent", agent: "retention",
+        id: "m2", author: "agent", agent: "assistant",
         text: "It is. The Tangail Cotton Saree in mustard, ৳2,190. Only 3 left, so I've held one for you for the next 6 hours.",
         time: "09:51", language: "english", confidence: 0.92, productRef: "P-1212",
         tools: [
@@ -814,15 +764,15 @@ export const conversations: Conversation[] = [
         time: "20:12", language: "banglish",
       },
       {
-        id: "m2", author: "agent", agent: "router",
-        text: "Routed to Support. Refund request, negative sentiment 0.86.",
+        id: "m2", author: "agent", agent: "assistant",
+        text: "Refund request, negative sentiment 0.86.",
         time: "20:12", confidence: 0.95,
         tools: [
           { id: "t1", tool: "score_sentiment", args: { text: "Amar taka ferot chai, ekhon e" }, outcome: "allowed", detail: "negative · 0.86", latencyMs: 140 },
         ],
       },
       {
-        id: "m3", author: "agent", agent: "support",
+        id: "m3", author: "agent", agent: "assistant",
         text: "Dukkhito Shakil bhai. ORD-9314 ta ami dekhchi. 9 August e deliver hoyeche, tai 7 diner return window er bhitorei achen. Return ta ami process kore dicchi.",
         gloss: "Sorry Shakil bhai. I'm looking at ORD-9314. Delivered on 9 August, so you're inside the 7-day return window. I'm processing the return.",
         time: "20:13", language: "banglish", confidence: 0.9,
@@ -835,16 +785,16 @@ export const conversations: Conversation[] = [
         ],
       },
       {
-        id: "m4", author: "agent", agent: "support",
+        id: "m4", author: "agent", agent: "assistant",
         text: "Refund of ৳1,980 proposed.",
         time: "20:13",
         tools: [
-          { id: "t4", tool: "issue_refund", args: { order_id: "ORD-9314", amount: 1980 }, outcome: "blocked", detail: "Support cannot refund. Sent to the Manager.", latencyMs: 12, policy: "P-02" },
+          { id: "t4", tool: "issue_refund", args: { order_id: "ORD-9314", amount: 1980 }, outcome: "blocked", detail: "The Assistant cannot refund. Sent to the Manager.", latencyMs: 12, policy: "P-02" },
         ],
       },
       {
         id: "m5", author: "system",
-        text: "Manager review requested. Refund ৳1,980 on ORD-9314. Under the ৳3,000 ceiling, but outside what Support is allowed to do.",
+        text: "Manager review requested. Refund ৳1,980 on ORD-9314. Under the ৳3,000 ceiling, but outside what the Assistant is allowed to do.",
         time: "20:14",
       },
     ],
@@ -855,7 +805,7 @@ export const conversations: Conversation[] = [
     handle: "@farhan.k",
     initials: "FK",
     channel: "facebook",
-    agent: "sales",
+    agent: "assistant",
     intent: "Restock question",
     sentiment: "positive",
     language: "banglish",
@@ -874,7 +824,7 @@ export const conversations: Conversation[] = [
       // data must contain it rather than read as tidily invented.
       { id: "m1", author: "customer", text: "Kemon dam? Ar M size ase?", gloss: "What's the price? And is M size available?", time: "09:12", language: "banglish" },
       {
-        id: "m2", author: "agent", agent: "sales",
+        id: "m2", author: "agent", agent: "assistant",
         text: "Nandini Embroidered Kurti ৳1,590. M size ache, 8 ta baki. Checkout link pathacchi.",
         gloss: "The Nandini Embroidered Kurti is ৳1,590. M is available, 8 left. Sending the checkout link.",
         time: "09:12", language: "banglish", confidence: 0.95, productRef: "P-1098",
@@ -927,7 +877,7 @@ export const conversations: Conversation[] = [
     handle: "@sadia.c",
     initials: "SC",
     channel: "instagram",
-    agent: "sales",
+    agent: "assistant",
     intent: "Sizing",
     sentiment: "positive",
     language: "banglish",
@@ -942,7 +892,7 @@ export const conversations: Conversation[] = [
     messages: [
       { id: "m1", author: "customer", text: "Amar height 5'4\", kon size nibo?", gloss: "I'm 5'4\", which size should I take?", time: "07:30", language: "banglish" },
       {
-        id: "m2", author: "agent", agent: "sales",
+        id: "m2", author: "agent", agent: "assistant",
         text: "5'4\" er jonno M size ta perfect hobe. Waist 30–32\", chest 36–38\". Sizing guide theke bolchi.",
         gloss: "For 5'4\" the M size will be perfect. Waist 30–32\", chest 36–38\". This is from the sizing guide.",
         time: "07:31", language: "banglish", confidence: 0.88,
@@ -1432,20 +1382,20 @@ export interface ToolDef {
 }
 
 export const toolCatalog: ToolDef[] = [
-  { name: "search_products", label: "Look up a product", description: "Search the catalogue by name, category or price.", scopes: ["sales", "retention"], mutating: false, callsToday: 1284 },
-  { name: "check_inventory", label: "Check stock", description: "Read what is actually left of an item right now.", scopes: ["sales", "retention", "operations"], mutating: false, callsToday: 942 },
-  { name: "get_order_status", label: "Check an order", description: "Look up an order by number or phone, with where it is.", scopes: ["support", "operations"], mutating: false, callsToday: 806 },
-  { name: "search_knowledge_base", label: "Look something up", description: "Search your policies, FAQs and product notes.", scopes: ["sales", "support", "retention"], mutating: false, callsToday: 1477 },
-  { name: "check_return_eligibility", label: "Check if it can be returned", description: "Test an order against the return window and condition.", scopes: ["support"], mutating: false, callsToday: 143 },
-  { name: "create_payment_link", label: "Send a checkout link", description: "Start an order and send the customer a way to pay.", scopes: ["sales"], mutating: true, callsToday: 218 },
-  { name: "apply_discount", label: "Give a discount", description: "Take a percentage off an order that has not been paid yet.", scopes: ["sales", "retention"], mutating: true, gatedBy: "G-1", callsToday: 96 },
-  { name: "recover_cart", label: "Send a cart reminder", description: "Nudge someone who left something behind, if the window allows.", scopes: ["retention"], mutating: true, gatedBy: "P-1", callsToday: 64 },
-  { name: "send_restock_alert", label: "Send a restock alert", description: "Tell people waiting on an item that it is back.", scopes: ["retention"], mutating: true, gatedBy: "P-1", callsToday: 31 },
+  { name: "search_products", label: "Look up a product", description: "Search the catalogue by name, category or price.", scopes: ["assistant"], mutating: false, callsToday: 1284 },
+  { name: "check_inventory", label: "Check stock", description: "Read what is actually left of an item right now.", scopes: ["assistant"], mutating: false, callsToday: 942 },
+  { name: "get_order_status", label: "Check an order", description: "Look up an order by number or phone, with where it is.", scopes: ["assistant"], mutating: false, callsToday: 806 },
+  { name: "search_knowledge_base", label: "Look something up", description: "Search your policies, FAQs and product notes.", scopes: ["assistant"], mutating: false, callsToday: 1477 },
+  { name: "check_return_eligibility", label: "Check if it can be returned", description: "Test an order against the return window and condition.", scopes: ["assistant"], mutating: false, callsToday: 143 },
+  { name: "create_payment_link", label: "Send a checkout link", description: "Start an order and send the customer a way to pay.", scopes: ["assistant"], mutating: true, callsToday: 218 },
+  { name: "apply_discount", label: "Give a discount", description: "Take a percentage off an order that has not been paid yet.", scopes: ["assistant"], mutating: true, gatedBy: "G-1", callsToday: 96 },
+  { name: "recover_cart", label: "Send a cart reminder", description: "Nudge someone who left something behind, if the window allows.", scopes: ["assistant"], mutating: true, gatedBy: "P-1", callsToday: 64 },
+  { name: "send_restock_alert", label: "Send a restock alert", description: "Tell people waiting on an item that it is back.", scopes: ["assistant"], mutating: true, gatedBy: "P-1", callsToday: 31 },
   { name: "issue_refund", label: "Refund an order", description: "Send money back, in full or in part.", scopes: ["manager"], mutating: true, gatedBy: "G-2", callsToday: 24 },
   { name: "approve_exception", label: "Approve an exception", description: "Allow a one-off departure from your own rules.", scopes: ["manager"], mutating: true, gatedBy: "G-2", callsToday: 9 },
-  { name: "sync_inventory", label: "Update stock", description: "Count an item down when it sells, and back up when it returns.", scopes: ["operations"], mutating: true, callsToday: 48 },
-  { name: "update_crm_contact", label: "Save a customer", description: "Remember a customer's name, phone and address for next time.", scopes: ["operations"], mutating: true, callsToday: 176 },
-  { name: "handoff_to_human", label: "Hand over to a person", description: "Pass the conversation to a teammate with the full history.", scopes: ["manager", "support"], mutating: true, callsToday: 38 },
+  { name: "sync_inventory", label: "Update stock", description: "Count an item down when it sells, and back up when it returns.", scopes: ["assistant"], mutating: true, callsToday: 48 },
+  { name: "update_crm_contact", label: "Save a customer", description: "Remember a customer's name, phone and address for next time.", scopes: ["assistant"], mutating: true, callsToday: 176 },
+  { name: "handoff_to_human", label: "Hand over to a person", description: "Pass the conversation to a teammate with the full history.", scopes: ["assistant", "manager"], mutating: true, callsToday: 38 },
 ];
 
 /** Labels for the classifier steps, which are not in the catalogue above. */
@@ -1476,15 +1426,15 @@ export interface GatewayEvent {
 }
 
 export const gatewayLog: GatewayEvent[] = [
-  { id: "g1", time: "10:41:22", tool: "get_order_status", agent: "support", outcome: "allowed", detail: "ORD-9317 → shipped · Pathao BD00182917", latencyMs: 380, conversationId: "CV-220" },
-  { id: "g2", time: "10:41:05", tool: "search_products", agent: "sales", outcome: "allowed", detail: "jamdani saree → 1 match", latencyMs: 240, conversationId: "CV-221" },
-  { id: "g3", time: "10:40:58", tool: "apply_discount", agent: "sales", outcome: "blocked", detail: "15% asked for · your limit is 10% · sent to you", latencyMs: 8, policy: "P-01", conversationId: "CV-219" },
-  { id: "g4", time: "10:40:41", tool: "create_payment_link", agent: "sales", outcome: "allowed", detail: "Draft order · ৳3,890 · link issued", latencyMs: 640, conversationId: "CV-221" },
+  { id: "g1", time: "10:41:22", tool: "get_order_status", agent: "assistant", outcome: "allowed", detail: "ORD-9317 → shipped · Pathao BD00182917", latencyMs: 380, conversationId: "CV-220" },
+  { id: "g2", time: "10:41:05", tool: "search_products", agent: "assistant", outcome: "allowed", detail: "jamdani saree → 1 match", latencyMs: 240, conversationId: "CV-221" },
+  { id: "g3", time: "10:40:58", tool: "apply_discount", agent: "assistant", outcome: "blocked", detail: "15% asked for · your limit is 10% · sent to you", latencyMs: 8, policy: "P-01", conversationId: "CV-219" },
+  { id: "g4", time: "10:40:41", tool: "create_payment_link", agent: "assistant", outcome: "allowed", detail: "Draft order · ৳3,890 · link issued", latencyMs: 640, conversationId: "CV-221" },
   { id: "g5", time: "10:40:30", tool: "issue_refund", agent: "manager", outcome: "approved", detail: "ORD-9310 · ৳2,450 · approved by Ayesha Karim", latencyMs: 940, policy: "P-02", conversationId: "CV-216" },
-  { id: "g6", time: "10:40:12", tool: "sync_inventory", agent: "operations", outcome: "allowed", detail: "Silk Dupatta → 40 back in stock", latencyMs: 1120 },
-  { id: "g7", time: "10:39:58", tool: "get_order_status", agent: "support", outcome: "fallback", detail: "Courier API 3.2s · static reply sent, thread flagged", latencyMs: 3210, policy: "P-06" },
-  { id: "g8", time: "10:39:31", tool: "recover_cart", agent: "retention", outcome: "blocked", detail: "24h window closed 11m ago · send suppressed", latencyMs: 6, policy: "P-05" },
-  { id: "g9", time: "10:39:02", tool: "search_knowledge_base", agent: "support", outcome: "allowed", detail: "return policy COD → 3 chunks · top 0.97", latencyMs: 210 },
+  { id: "g6", time: "10:40:12", tool: "sync_inventory", agent: "assistant", outcome: "allowed", detail: "Silk Dupatta → 40 back in stock", latencyMs: 1120 },
+  { id: "g7", time: "10:39:58", tool: "get_order_status", agent: "assistant", outcome: "fallback", detail: "Courier API 3.2s · static reply sent, thread flagged", latencyMs: 3210, policy: "P-06" },
+  { id: "g8", time: "10:39:31", tool: "recover_cart", agent: "assistant", outcome: "blocked", detail: "24h window closed 11m ago · send suppressed", latencyMs: 6, policy: "P-05" },
+  { id: "g9", time: "10:39:02", tool: "search_knowledge_base", agent: "assistant", outcome: "allowed", detail: "return policy COD → 3 chunks · top 0.97", latencyMs: 210 },
   { id: "g10", time: "10:38:44", tool: "handoff_to_human", agent: "manager", outcome: "allowed", detail: "CV-216 → Ayesha Karim · context attached", latencyMs: 190, conversationId: "CV-216" },
 ];
 
@@ -1519,7 +1469,7 @@ export const revenueSeries = [
 export const funnel = [
   { stage: "Comments", value: 86, note: "on the last post" },
   { stage: "DMs opened", value: 41, note: "compliant private replies" },
-  { stage: "Qualified", value: 26, note: "intent confirmed by Sales" },
+  { stage: "Qualified", value: 26, note: "intent confirmed by the Assistant" },
   { stage: "Checkout links", value: 18, note: "draft orders created" },
   { stage: "Paid orders", value: 11, note: "payment captured" },
 ];
