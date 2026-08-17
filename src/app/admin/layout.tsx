@@ -44,7 +44,7 @@ const navigation = [
       { href: "/admin/agents", label: "Your assistant", icon: Users },
       { href: "/admin/guardrails", label: "Your rules", icon: ShieldCheck },
       { href: "/admin/knowledge", label: "Setup", icon: BookOpen },
-      { href: "/admin/integrations", label: "Channels", icon: Plug },
+      { href: "/admin/integrations", label: "Integrations", icon: Plug },
     ],
   },
 ];

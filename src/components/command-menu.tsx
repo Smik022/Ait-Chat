@@ -34,7 +34,7 @@ const routes = [
   { href: "/admin/knowledge", label: "Setup", icon: BookOpen },
   { href: "/admin/products", label: "Products", icon: Tag },
   { href: "/admin/orders", label: "Orders", icon: Package },
-  { href: "/admin/integrations", label: "Channels", icon: Plug },
+  { href: "/admin/integrations", label: "Integrations", icon: Plug },
 ];
 
 export function CommandMenu({
