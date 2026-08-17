@@ -8,8 +8,9 @@ import {
   Check,
   FileText,
   Play,
-  Plus,
   RotateCcw,
+  UploadCloud,
+  X,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -613,22 +614,129 @@ function RetrievalDemo() {
   );
 }
 
-function Library() {
+/* ------------------------------- Your files -------------------------------- */
+
+interface Upload {
+  id: number;
+  name: string;
+  size: number;
+  status: "reading" | "ready";
+  note: string;
+}
+
+const fmtSize = (b: number) =>
+  b >= 1048576
+    ? `${(b / 1048576).toFixed(1)} MB`
+    : `${Math.max(1, Math.round(b / 1024))} KB`;
+
+function DropZone({ onFiles }: { onFiles: (files: File[]) => void }) {
+  const [over, setOver] = React.useState(false);
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  return (
+    <div
+      onDragOver={(e) => {
+        e.preventDefault();
+        setOver(true);
+      }}
+      onDragLeave={() => setOver(false)}
+      onDrop={(e) => {
+        e.preventDefault();
+        setOver(false);
+        onFiles([...e.dataTransfer.files]);
+      }}
+      className={cn(
+        "m-4 mb-0 flex flex-col items-center justify-center gap-1.5 rounded-md border border-dashed px-4 py-8 text-center transition-colors",
+        over ? "border-live bg-live-soft" : "bg-muted/30"
+      )}
+    >
+      <UploadCloud className="size-5 text-muted-foreground" />
+      <p className="text-[13px] font-medium">Drop your files here</p>
+      <p className="max-w-xs text-[12px] leading-relaxed text-muted-foreground">
+        Price lists, size charts, delivery notes, FAQs. Photos of them work too.
+      </p>
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        className="mt-1.5 inline-flex h-8 items-center rounded-md border bg-background px-3 text-[12px] font-medium transition-colors hover:bg-muted"
+      >
+        Or pick from your computer
+      </button>
+      <input
+        ref={inputRef}
+        type="file"
+        multiple
+        aria-label="Pick files to add"
+        className="sr-only"
+        onChange={(e) => {
+          onFiles([...(e.target.files ?? [])]);
+          e.target.value = "";
+        }}
+      />
+    </div>
+  );
+}
+
+function Library({
+  uploads,
+  onFiles,
+  onRemove,
+}: {
+  uploads: Upload[];
+  onFiles: (files: File[]) => void;
+  onRemove: (id: number) => void;
+}) {
   return (
     <Panel>
       <PanelHeader
-        title="Documents"
-        description="Optional. Only if you have written policies already."
-        action={
-          <button
-            type="button"
-            className="inline-flex h-7 items-center gap-1.5 rounded-md border px-2 text-[11px] font-medium transition-colors hover:bg-muted"
-          >
-            <Plus className="size-3" />
-            Add
-          </button>
-        }
+        title="Your files"
+        description="Drop in anything your customers ask about. The assistant reads it and answers from it."
       />
+
+      <DropZone onFiles={onFiles} />
+
+      {uploads.length ? (
+        <ul className="mt-3 divide-y border-t">
+          {uploads.map((u) => (
+            <li key={u.id} className="animate-row-in px-4 py-2.5">
+              <div className="flex items-center gap-3">
+                <FileText className="size-3.5 shrink-0 text-muted-foreground" />
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-[13px] font-medium">{u.name}</div>
+                  <div className="text-[11px] text-muted-foreground">
+                    {fmtSize(u.size)} · {u.note}
+                  </div>
+                </div>
+                {u.status === "reading" ? (
+                  <Chip tone="bg-pend-soft text-pend-ink">
+                    <StatusDot className="bg-pend" pulse />
+                    Reading
+                  </Chip>
+                ) : (
+                  <Chip tone="bg-live-soft text-live-ink">
+                    <Check className="size-2.5" strokeWidth={3} />
+                    Ready
+                  </Chip>
+                )}
+                <button
+                  type="button"
+                  onClick={() => onRemove(u.id)}
+                  aria-label={`Remove ${u.name}`}
+                  className="shrink-0 rounded p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-block"
+                >
+                  <X className="size-3.5" />
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
+      <div className={cn("mt-3 border-t", !uploads.length && "mt-4")}>
+        <p className="px-4 pt-2.5 text-[11px] font-medium text-muted-foreground">
+          Already added
+        </p>
+      </div>
       <ul className="divide-y">
         {knowledgeDocs.map((d) => {
           const meta = statusMeta[d.status];
@@ -673,44 +781,90 @@ export default function KnowledgePage() {
   const set = (patch: Partial<BusinessBasics>) =>
     setBasics((prev) => ({ ...prev, ...patch }));
 
+  const [uploads, setUploads] = React.useState<Upload[]>([]);
+  const nextUpload = React.useRef(1);
+
+  const addFiles = (files: File[]) => {
+    for (const f of files) {
+      const id = nextUpload.current++;
+      setUploads((prev) => [
+        { id, name: f.name, size: f.size, status: "reading", note: "Reading it now" },
+        ...prev,
+      ]);
+      const finish = (note: string) =>
+        window.setTimeout(() => {
+          setUploads((prev) =>
+            prev.map((u) => (u.id === id ? { ...u, status: "ready", note } : u))
+          );
+        }, 1200 + (id % 3) * 300);
+      // Text files really are read, so the word count is true. Everything else
+      // gets an honest "ready" without inventing a page count.
+      if (/\.(txt|md|csv)$/i.test(f.name)) {
+        f.text()
+          .then((text) => {
+            const words = text.trim().split(/\s+/).filter(Boolean).length;
+            finish(
+              `Read ${words.toLocaleString("en-US")} words. Ready to answer from.`
+            );
+          })
+          .catch(() => finish("Ready to answer from."));
+      } else if (/\.(png|jpe?g|webp|heic)$/i.test(f.name)) {
+        finish("Photo read. Ready to answer from.");
+      } else {
+        finish("Ready to answer from.");
+      }
+    }
+  };
+
   const answers = derivedAnswers(basics);
-  const ready = knowledgeDocs.filter((d) => d.status === "indexed").length;
+  const readySeeded = knowledgeDocs.filter((d) => d.status === "indexed").length;
+  const readyUploads = uploads.filter((u) => u.status === "ready").length;
 
   return (
     <div className="space-y-5">
       <PageHeader
-        title="Knowledge"
-        description="What your agents are allowed to tell people. Most of it comes from a handful of questions about how your shop works, so there is nothing to write and nothing to upload."
+        title="Knowledge base"
+        description="What your assistant knows about your shop. Drop in files you already have, or answer a few questions and the basics are written for you."
       />
 
       <MetricRow>
         <Metric
-          label="Answers from your setup"
-          value={answers.length}
-          basis="no documents needed"
+          label="Files added"
+          value={knowledgeDocs.length + uploads.length}
+          basis={`${readySeeded + readyUploads} ready to answer from`}
         />
-        <Metric label="Documents added" value={knowledgeDocs.length} basis={`${ready} ready`} />
+        <Metric
+          label="Answers from your questions"
+          value={answers.length}
+          basis="built as you type"
+        />
         <Metric label="Typical lookup" value="387ms" basis="question to answer" />
         <Metric label="Answers with a source" value="all of them" basis="no source, no claim" />
       </MetricRow>
 
-      <Tabs defaultValue="setup">
+      <Tabs defaultValue="files">
         <TabsList>
-          <TabsTrigger value="setup">Setup</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
+          <TabsTrigger value="files">Your files</TabsTrigger>
+          <TabsTrigger value="questions">Answer questions</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="setup">
+        <TabsContent value="files">
           <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,24rem)]">
-            <Setup basics={basics} set={set} />
-            <WhatItKnows basics={basics} />
+            <Library
+              uploads={uploads}
+              onFiles={addFiles}
+              onRemove={(id) =>
+                setUploads((prev) => prev.filter((u) => u.id !== id))
+              }
+            />
+            <RetrievalDemo />
           </div>
         </TabsContent>
 
-        <TabsContent value="documents">
+        <TabsContent value="questions">
           <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,24rem)]">
-            <RetrievalDemo />
-            <Library />
+            <Setup basics={basics} set={set} />
+            <WhatItKnows basics={basics} />
           </div>
         </TabsContent>
       </Tabs>

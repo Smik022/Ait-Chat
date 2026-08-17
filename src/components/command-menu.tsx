@@ -31,7 +31,7 @@ const routes = [
   { href: "/admin/comments", label: "Comments", icon: MessageSquareQuote },
   { href: "/admin/agents", label: "Your assistant", icon: Users },
   { href: "/admin/guardrails", label: "Your rules", icon: ShieldCheck },
-  { href: "/admin/knowledge", label: "Setup", icon: BookOpen },
+  { href: "/admin/knowledge", label: "Knowledge base", icon: BookOpen },
   { href: "/admin/products", label: "Products", icon: Tag },
   { href: "/admin/orders", label: "Orders", icon: Package },
   { href: "/admin/integrations", label: "Integrations", icon: Plug },
